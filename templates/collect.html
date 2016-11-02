@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title></title>
+
+	<!-- <script src='https://code.jquery.com/jquery-2.2.3.min.js'></script> -->
+	<script src="{{ url_for('static', filename='jquery-2.1.0.min.js')}}"></script>
+
+	<!-- <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>  -->
+	<script src="{{ url_for('static', filename='mapbox.js')}}"></script> 
+
+	<!-- <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' /> -->
+	<link href="{{ url_for('static', filename='mapbox.css')}}" rel='stylesheet' />
+	
+	<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+
+	<style type="text/css">
+		#map { 
+		  	position:relative; 
+		  	height: 500px;
+		  	margin-bottom: 10px;
+		 }
+
+		.route {
+			border: 1px solid black;
+		  	border-radius: 8px;
+		  	padding: 10px;
+		  	/*display: inline-block;*/
+		  	width: 100%
+		}
+
+		thead {
+			background-color: #A0A0A0
+		}		
+	</style>
+
+</head>
+<body>
+<div id='map'></div>  
+<div id='routes'></div>
+<script> 
+
+	L.mapbox.accessToken = 'pk.eyJ1IjoicmFtaW4zNiIsImEiOiJjaWlvdm9mbzMwMDZsdnZrc3JpN2Q2MjlxIn0.6OOBFu5I20Q2IbK_4ZJq7Q';
+	var map = L.mapbox.map('map', 'mapbox.streets')
+    .setView([40, -74.50], 9);
+	var geocoder = L.mapbox.geocoder('mapbox.places')
+
+	var routes = [];
+	var routes_box = $('#routes');
+
+	function create_table_cell(id_ext, content){
+		var td = $("<td>");	
+		var td_in = $("<span>")
+			.attr("id","route_point_"+(length-1)+'_'+id_ext)
+			.appendTo(td);
+		return td;
+
+	}
+
+	function create_route_input() {
+		var table = $("#route_table > tbody > tr");
+		var length = $("#route_table > tbody > tr").length;
+		var line = $("<tr>")
+			.attr("id","route-row-"+length)
+			.attr("class","route-point-descr");
+		// number
+		$("<td>"+length+"</td>")
+			.attr("align","center")
+			.appendTo(line);
+		create_input_field('ip').appendTo(line);
+		create_input_field('location').appendTo(line);
+		create_input_field('isp').appendTo(line);
+		create_input_field('isp_nationality').appendTo(line);
+		create_input_field('cable_name').appendTo(line);
+		create_input_field('port').appendTo(line);
+		create_input_field('nsp').appendTo(line);
+		create_input_field('nsp_nationality').appendTo(line);
+
+		line.appendTo($("#route_table_body"));
+		return length;
+	}
+
+	function addRoute(route){
+
+		console.log(route.co2);
+		var id = routes.length;
+		routes.push(route);
+		route_box = $('<div>')
+			.attr("id","route-"+id)
+			.attr("class","route");
+
+		var url = $('<span>').html('URL: ' + route.url);
+		var description = $('<span>').html(' / description: ' + route.description);
+		var total_km = $('<span>').html(' / Total km: ' + route.total_km);
+		var datasize = $('<span>').html(' / Data size: ' + route.datasize);
+		var co2 = $('<span>').html(' / CO2: ' + route.co2);
+
+		var general = $('<div>');
+		url.appendTo(general);
+		description.appendTo(general);
+		total_km.appendTo(general);
+		datasize.appendTo(general);
+		co2.appendTo(general);
+		general.appendTo(route_box);
+
+		table = $('<table>');
+		th = $('<thead>');
+		td = $('<th>').html('#').appendTo(th);
+		td = $('<th>').html('IP').appendTo(th);
+		td = $('<th>').html('Location').appendTo(th);
+		td = $('<th>').html('ISP').appendTo(th);
+		td = $('<th>').html('ISP nationality').appendTo(th);
+		td = $('<th>').html('Cable name').appendTo(th);
+		td = $('<th>').html('port in/out').appendTo(th);
+		td = $('<th>').html('NSP').appendTo(th);
+		td = $('<th>').html('NSP nationality').appendTo(th);
+		th.appendTo(table)
+		coords = [];
+
+		// console.log(route.points);
+		for(var p = 0; p < route.points.length; p++){
+			var point = route.points[p];
+			row = $('<tr>');
+
+			td = $('<td>').html(p).appendTo(row);
+			td = $('<td>').html(point.ip).appendTo(row);
+			td = $('<td>').html(point.location).appendTo(row);
+			td = $('<td>').html(point.isp).appendTo(row);
+			td = $('<td>').html(point.isp_nationality).appendTo(row);
+			td = $('<td>').html(point.cable_name).appendTo(row);
+			td = $('<td>').html(point.port).appendTo(row);
+			td = $('<td>').html(point.nsp).appendTo(row);
+			td = $('<td>').html(point.nsp_nationality).appendTo(row);			
+			row.appendTo(table);
+			coords.push(point.coordinate);
+		}
+		// console.log(coords);
+		route_polyline = L.polyline(coords,  {color: 'red'}).addTo(map);
+
+		table.appendTo(route_box);
+
+		route_box.appendTo(routes_box);
+		console.log('route added');
+	}
+
+	function createMarker(coordinate) {
+		var marker = L.marker(coordinate, {
+		    icon: get_icon(),
+		    draggable: false,
+		}).addTo(map);
+		return marker;
+	}
+
+	function get_icon() {
+		return L.mapbox.marker.icon({
+		        'marker-size': 'large',
+		        'marker-symbol': 'circle',
+		        'marker-color': "#fa0",
+		});
+	}
+
+	addRoute({some:'thing', points: [
+		{ip:12,location:'berlin',isp:'supermax',isp_nationality:'polen',cable_name:'big tube',port:'out',nsp:'all nets', nsp_nationality:'russia',coordinate:[5,5]},
+		{ip:39, coordinate:[5,6]}]});
+
+
+	var lastMsg = null;
+
+	$(document).ready(function(){
+	    var socket = io.connect('http://' + document.domain + ':' + location.port);
+	    socket.on('newroute', function(msg) {
+	        console.log(msg);
+	        lastMsg = msg;
+	        addRoute(JSON.parse(msg));
+
+	    });
+	});
+
+</script>
+
+</body>
+</html>
