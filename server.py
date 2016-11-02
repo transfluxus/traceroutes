@@ -40,7 +40,7 @@ def input():
         # print len(points)
         # print '<<<<<<'
         timeStamp = datetime.now().strftime('%y%m%d-%H%M%S')
-        with open('r-'+timeStamp+'.json','w') as f:
+        with open('routes/r-'+timeStamp+'.json','w') as f:
             f.write(val_json)
         # print 'p:',points
     except Exception as err:
