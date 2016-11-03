@@ -2,6 +2,7 @@ from flask import Flask, render_template, send_file, safe_join, request,jsonify
 import json
 from datetime import datetime
 from flask.ext.socketio import SocketIO, emit
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -13,6 +14,21 @@ def whatever():
 @app.route('/', methods=['GET'])
 def index():
 	return render_template('index.html')
+
+@app.route('/today_routes',methods=['GET'])
+def getRoutes():
+    files = os.listdir("routes")
+    now = datetime.now()
+    return_routes = []
+    for file in files:
+        # print file[2:-5]
+        file_time = datetime.strptime(file[2:-5],'%y%m%d-%H%M%S')
+        if (now - file_time).days < 1:
+            # print 'adding',file
+            with open('routes/'+file) as f:
+                return_routes.append(json.loads(f.read()))
+    print 'returning',len(return_routes),'routes'
+    return json.dumps(return_routes)
 
 @app.route('/collect',methods=['GET'])
 def collect():
@@ -67,5 +83,6 @@ def test_disconnect():
 
 # RUN APP
 if __name__ == "__main__":
-    socketio.run(app, host='0.0.0.0')
+    app.run(host='0.0.0.0')
+    # socketio.run(app, host='0.0.0.0')
     # socketio.run(app,debug=False, host='0.0.0.0', port=8080)

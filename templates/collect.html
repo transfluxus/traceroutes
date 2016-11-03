@@ -83,7 +83,7 @@
 
 	function addRoute(route){
 
-		console.log(route.co2);
+		console.log(route);
 		var id = routes.length;
 		routes.push(route);
 		route_box = $('<div>')
@@ -173,7 +173,6 @@
 	        console.log(msg);
 	        lastMsg = msg;
 	        addRoute(JSON.parse(msg));
-
 	    });
 	});
 

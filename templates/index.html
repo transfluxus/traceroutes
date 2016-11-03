@@ -1,3 +1,9 @@
+<!-- 
+TODOS:
+add tracker to route creation
+add destination address marker with popup showing the tracker
+ -->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,6 +18,9 @@
 
 	<!-- <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' /> -->
 	<link href="{{ url_for('static', filename='mapbox.css')}}" rel='stylesheet' />
+
+	<script src="{{ url_for('static', filename='Colour.js')}}"></script> 
+	
 	
 	<style type="text/css">
 		#map { 
@@ -52,24 +61,31 @@
 <script type="text/javascript">
 	function add_route() {
 		route_menu_enable(true);
+		var clr = next_route_color();
+		console.log(clr);
+		temp_route_polyline = L.polyline([],  {color: clr}).addTo(map);
 		add_route_point();
 	}
 
 	function add_route_point() {
 		var index = create_route_input();
-		var route_marker = create_route_marker(index); 
-		console.log("add_route_point")
-		console.log(route_marker);
+		var route_marker = createMarker("route_point",undefined,true);//; create_route_marker(index); 
 		temp_route_marker.push(route_marker);
-		if(temp_route_polyline !== null) {
-			temp_route_polyline.addLatLng([
-				route_marker.getLatLng().lat,
-				route_marker.getLatLng().lng]);
-		} else {
-			temp_route_polyline = L.polyline([],  {color: 'red'}).addTo(map);
+		temp_route_polyline.addLatLng([
+			route_marker.getLatLng().lat,
+			route_marker.getLatLng().lng]);
+		route_marker.on("drag",function() {
 			update_route_polyline();
-		}
+		});
+	}
 
+	var lastHue = 0;
+	function next_route_color(){
+		var clr = new HSLColour(lastHue, 100, 50);
+		// console.log(clr);
+		// console.log(clr.getCSSHexadecimalRGB());
+		lastHue = (lastHue + 222.5) % 360;
+		return clr.getCSSHexadecimalRGB();
 	}
 
 	function update_route_polyline() {
@@ -116,18 +132,18 @@
 		return length;
 	}
 
-	function create_route_marker(id) {
-		var route_marker = createMarker("route_point",true);
-		var coordinate = route_marker.getLatLng();
-		$("#route_point_"+id+"lat").val(coordinate.lat);
-		$("#route_point_"+id+"lng").val(coordinate.lng);
-		route_marker.on("drag",function() {
-			$("#route_point_"+id+"lat").val(route_marker.getLatLng().lat);
-			$("#route_point_"+id+"lng").val(route_marker.getLatLng().lng);	
-			update_route_polyline();
-		});
-		return route_marker;
-	}
+	// function create_route_marker(id) {
+	// 	var route_marker = createMarker("route_point",undefined,true);
+	// 	var coordinate = route_marker.getLatLng();
+	// 	$("#route_point_"+id+"lat").val(coordinate.lat);
+	// 	$("#route_point_"+id+"lng").val(coordinate.lng);
+	// 	route_marker.on("drag",function() {
+	// 		$("#route_point_"+id+"lat").val(route_marker.getLatLng().lat);
+	// 		$("#route_point_"+id+"lng").val(route_marker.getLatLng().lng);	
+	// 		update_route_polyline();
+	// 	});
+	// 	return route_marker;
+	// }
 
 
 	function route_done() {
@@ -168,7 +184,8 @@
 			total_km: total_km,
 			datasize: datasize,
 			co2: co2,
-			points: JSON.stringify(points)
+			points: JSON.stringify(points),
+			// color: temp_route_color
 		},function(){
 			console.log('new route sent');
 		});
@@ -193,13 +210,18 @@
 		}
 	}		
 
-	function createMarker(type) {
-		var coordinate = map.getCenter();
+	function createMarker(type, coordinate, temporary) {
+		if (coordinate === undefined)
+			coordinate = map.getCenter();
+		if (temporary === undefined)
+			temporary = true;
+		// console.log(coordinate);
 		var marker = L.marker(coordinate, {
-		    icon: get_icon(type,true),
-		    draggable: true,
+		    icon: get_icon(type,temporary),
+		    draggable: temporary,
 		}).addTo(map);
 		marker.type = type;
+		// marker.bindPopup("<b>Hello world!</b><br>I am a popup.");
 		return marker;
 	}
 	 
@@ -219,9 +241,9 @@
 
 	L.Marker.prototype.setType = function(type) {
 			this.type = type;
-			if(type == 'route_point') {
-				this.setIcon(get_icon("next",true));
-			}
+			// if(type == 'route_point') {
+			this.setIcon(get_icon(type,true));
+			// }
 	}
 
 	function set_marker_type(type) {
@@ -230,15 +252,38 @@
 		}
 	}
 
+	function get_icon(type,is_temp) {
+		if(is_temp === undefined)
+			is_temp = false;
+		var color = is_temp ? "#fa0" : "#a0a0a0";
+		var icon = "prison"; //tracker
+		//if (type == "tracker")
+		if (type == "cookie") {
+			icon = "roadblock";
+		} else if(type == "route_point") {
+			icon = "circle";
+		} else if(type == 'route_start'){
+			icon = 'campsite'
+		} else if(type == 'route_destination'){
+			icon = 'star'
+		}
+
+		return L.mapbox.marker.icon({
+		        'marker-size': 'medium',
+		        'marker-symbol': icon,
+		        'marker-color': color,
+		    });
+	}
+
 	function marker_done() {
 		tempMarker.setIcon(get_icon(tempMarker.type,false));
 		tempMarker.dragging.disable();
 
-		var lat_ = $("#marker_latitude").val();
-		var lng_ = $("#marker_longitude").val();
+		// var lat_ = $("#marker_latitude").val();
+		// var lng_ = $("#marker_longitude").val();
 		//console.log(lat_,lng_);
 		var location = "";
-		locationQuery(lat_,lng_);
+		// locationQuery(lat_,lng_);
 		marker_menu_enable(false);
 	}
 
@@ -294,6 +339,7 @@
 	</table>
 
 </div>
+<div id='routes'></div>
 <!-- <input type="checkbox" id="exchange_nodes_checkbox" name="exchange_nodes_checkbox" value="exchange_nodes_checkbox">exchange points</input> -->
 <script> 
 
@@ -303,28 +349,11 @@ var map = L.mapbox.map('map', 'mapbox.streets')
 
 var geocoder = L.mapbox.geocoder('mapbox.places')
 
-var tempMarker = null;
 var temp_route_marker = [];
 var temp_route_polyline = null;
+// var temp_route_color = null;
 
-function get_icon(type,is_temp) {
-	if(is_temp === undefined)
-		is_temp = false;
-	var color = is_temp ? "#fa0" : "#a0a0a0";
-	var icon = "prison"; //tracker
-	//if (type == "tracker")
-	if (type == "cookie") {
-		icon = "roadblock";
-	} else if(type == "route_point") {
-		icon = "circle";
-	}
 
-	return L.mapbox.marker.icon({
-	        'marker-size': 'large',
-	        'marker-symbol': icon,
-	        'marker-color': color,
-	    });
-}
 
 //var trackerIcon = get_icon("tracker");
 
@@ -379,9 +408,94 @@ function showMap(err, data) {
     }
 }
 
-map.eachLayer(function(layer){
-	console.log(layer);
+// map.eachLayer(function(layer){
+// 	console.log(layer);
+// });
+
+var routes = [];		
+var routes_box = $('#routes');
+
+var temp_route_data;
+
+$.get('/today_routes',function(data){
+	// console.log(data);
+	temp_route_data = JSON.parse(data);
+	(JSON.parse(data)).forEach(addRoute);
+	// for (var i in JSON.parse(data)){
+	// 	console.log(route)
+	// 	addRoute(route);
+	// }
 });
+
+function addRoute(route){
+
+	// console.log(route);
+	var id = routes.length;
+	routes.push(route);
+	route_box = $('<div>')
+		.attr("id","route-"+id)
+		.attr("class","route");
+
+	var url = $('<span>').html('URL: ' + route.url);
+	var description = $('<span>').html(' / description: ' + route.description);
+	var total_km = $('<span>').html(' / Total km: ' + route.total_km);
+	var datasize = $('<span>').html(' / Data size: ' + route.datasize);
+	var co2 = $('<span>').html(' / CO2: ' + route.co2);
+
+	var general = $('<div>');
+	url.appendTo(general);
+	description.appendTo(general);
+	total_km.appendTo(general);
+	datasize.appendTo(general);
+	co2.appendTo(general);
+	general.appendTo(route_box);
+
+	table = $('<table>');
+	th = $('<thead>');
+	td = $('<th>').html('#').appendTo(th);
+	td = $('<th>').html('IP').appendTo(th);
+	td = $('<th>').html('Location').appendTo(th);
+	td = $('<th>').html('ISP').appendTo(th);
+	td = $('<th>').html('ISP nationality').appendTo(th);
+	td = $('<th>').html('Cable name').appendTo(th);
+	td = $('<th>').html('port in/out').appendTo(th);
+	td = $('<th>').html('NSP').appendTo(th);
+	td = $('<th>').html('NSP nationality').appendTo(th);
+	th.appendTo(table)
+	coords = [];
+
+	// console.log(route.points);
+	for(var p = 0; p < route.points.length; p++){
+		var point = route.points[p];
+		row = $('<tr>');
+
+		td = $('<td>').html(p).appendTo(row);
+		td = $('<td>').html(point.ip).appendTo(row);
+		td = $('<td>').html(point.location).appendTo(row);
+		td = $('<td>').html(point.isp).appendTo(row);
+		td = $('<td>').html(point.isp_nationality).appendTo(row);
+		td = $('<td>').html(point.cable_name).appendTo(row);
+		td = $('<td>').html(point.port).appendTo(row);
+		td = $('<td>').html(point.nsp).appendTo(row);
+		td = $('<td>').html(point.nsp_nationality).appendTo(row);			
+		row.appendTo(table);
+		coords.push(point.coordinate);
+		type = 'route_point';
+
+		if(p == 0)
+			type = 'route_start';
+		else if(p == (route.points.length - 1))
+			type = 'route_destination';
+		createMarker(type,point.coordinate,false,false);
+	}
+	// console.log(coords);
+	route_polyline = L.polyline(coords,  {color: next_route_color()}).addTo(map);
+
+	table.appendTo(route_box);
+
+	route_box.appendTo(routes_box);
+	// console.log('route added');
+}
 
 </script>
 
