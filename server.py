@@ -16,6 +16,7 @@ def index():
 
 @app.route('/today_routes',methods=['GET'])
 def getRoutes():
+    make_routes_dir()
     files = os.listdir("routes")
     now = datetime.now()
     return_routes = []
