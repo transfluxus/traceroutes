@@ -25,15 +25,16 @@ add destination address marker with popup showing the tracker
 	<style type="text/css">
 		#map { 
 		  	position:relative; 
-		  	height: 500px;
+		  	height: 600px;
 		  	margin-bottom: 10px;
 		  }
 
 		  .input_box {
-		  	border: 1px solid black;
+		  	border: 2px solid black;
 		  	border-radius: 8px;
 		  	padding: 10px;
 		  	display: inline-block;
+		  	margin: 15px;
 		  }
 
 		  .coord_input {
@@ -53,6 +54,14 @@ add destination address marker with popup showing the tracker
 
 		  .route_main_row {
 		  	background-color: #A0A0A0;
+		  }
+
+		  .routeBox {
+		  	border: 1px solid black;
+		  	border-radius: 8px;
+		  	padding: 10px;
+		  	display: inline-block;
+		  	margin: 15px;		  	
 		  }				
 	</style>
 
@@ -61,9 +70,9 @@ add destination address marker with popup showing the tracker
 <script type="text/javascript">
 	function add_route() {
 		route_menu_enable(true);
-		var clr = next_route_color();
-		console.log(clr);
-		temp_route_polyline = L.polyline([],  {color: clr}).addTo(map);
+		// var clr = next_route_color();
+		// console.log(clr);
+		temp_route_polyline = L.polyline([],  {color: 'red'}).addTo(map);
 		add_route_point();
 	}
 
@@ -77,6 +86,7 @@ add destination address marker with popup showing the tracker
 		route_marker.on("drag",function() {
 			update_route_polyline();
 		});
+		return route_marker;
 	}
 
 	var lastHue = 0;
@@ -98,6 +108,10 @@ add destination address marker with popup showing the tracker
 		temp_route_polyline.setLatLngs(latlngs);
 	}
 
+	function input_location_key(field) {
+		console.log('key');
+		console.log(field.attr('id'));
+	}
 
 	function create_input_field(id_ext){
 		var length = $("#route_table > tbody > tr").length;
@@ -105,8 +119,14 @@ add destination address marker with popup showing the tracker
 		var td_in = $("<input>")
 			.attr("id","route_point_"+(length-1)+'_'+id_ext)
 			.appendTo(td);
+		// if(id_ext == 'location'){
+		// 		td.bind('keypress', function(e) {
+		// 			console.log(e.keyCode);
+		// 			console.log(e);
+		// 		});
+			// td_in.attr('onkeypress','input_location_key('+("route_point_"+(length-1)+'_'+id_ext)+')');
+		// }
 		return td;
-
 	}
 
 	function create_route_input() {
@@ -130,6 +150,36 @@ add destination address marker with popup showing the tracker
 
 		line.appendTo($("#route_table_body"));
 		return length;
+	}
+
+	function add_tracker() {
+		var index = create_tracker_input();
+	}
+
+	function create_tracker_input() {
+		var table = $("#tracker_table > tbody > tr");
+		var length = $("#tracker_table > tbody > tr").length - 1;
+		var line = $("<tr>")
+			.attr("id","tracker-row-"+length);
+			// .attr("class","route-point-descr");
+		// number
+		$("<td>"+length+"</td>")
+			.attr("align","center")
+			.appendTo(line);
+		tracker_create_input_field('tracker_name').appendTo(line);
+		tracker_create_input_field('company').appendTo(line);
+		tracker_create_input_field('nationality').appendTo(line);
+		line.appendTo($("#tracker_table_body"));
+		return length;
+	}
+
+	function tracker_create_input_field(id_ext){
+		var length = $("#tracker_table > tbody > tr").length;
+		var td = $("<td>");	
+		var td_in = $("<input>")
+			.attr("id","tracker_"+(length-1)+'_'+id_ext)
+			.appendTo(td);
+		return td;
 	}
 
 	// function create_route_marker(id) {
@@ -166,6 +216,7 @@ add destination address marker with popup showing the tracker
 
 			point['coordinate'] = [router_marker.getLatLng().lat, router_marker.getLatLng().lng];
 			points.push(point);
+			map.removeLayer(temp_route_marker[m]);
 		}
 		temp_route_marker = [];
 		temp_route_polyline = null;
@@ -177,7 +228,33 @@ add destination address marker with popup showing the tracker
 		var datasize = $('#route_datasize')[0].value;
 		var co2 = $('#route_co2')[0].value;
 
-		console.log(points);
+		var tracker_no = $("#tracker_table_body tr").length;
+		console.log('number of trackers');
+		var trackers = [];
+		for(var t = 1; t <= tracker_no; t++) {
+			var tracker = {}
+			tracker['tracker_name'] = $('#tracker_'+t+'_tracker_name')[0].value;
+			tracker['company'] = $('#tracker_'+t+'_company')[0].value;
+			tracker['nationality'] = $('#tracker_'+t+'_nationality')[0].value;
+			trackers.push(tracker);
+			// console.log(tracker);
+		}
+
+		$('#tracker_table_body').empty();
+		// console.log(JSON.stringify(trackers));
+		// console.log(trackers);
+		// console.log(points);
+		route = {
+			url : url,
+			description : description,
+			total_km : total_km,
+			datasize : datasize,
+			co2 : co2,
+			points : points,
+			trackers : trackers
+		};
+		addRoute(route);
+
 		$.post('/newroute',{
 			url: url,
 			description: description,
@@ -185,6 +262,7 @@ add destination address marker with popup showing the tracker
 			datasize: datasize,
 			co2: co2,
 			points: JSON.stringify(points),
+			trackers : JSON.stringify(trackers)
 			// color: temp_route_color
 		},function(){
 			console.log('new route sent');
@@ -337,7 +415,24 @@ add destination address marker with popup showing the tracker
 		</tr>
 		
 	</table>
-
+	<table id='tracker_table' style='margin-top: 10px' border="1">
+		<thead class="route_main_row" >
+			<td>#</td>
+			<td>Tracker Name</td>
+			<td>Company</td>
+			<td>Nationality</td>
+		</thead>	
+		<tbody id="tracker_table_body">		
+		</tbody>
+		<tr class="route_main_row">	
+			<td>
+				<button class="route_option" onclick="add_tracker()" disabled>+</button>
+			</td>
+			<td></td>
+			<td></td>
+			<td></td>	
+		<tr>
+	</table>
 </div>
 <div id='routes'></div>
 <!-- <input type="checkbox" id="exchange_nodes_checkbox" name="exchange_nodes_checkbox" value="exchange_nodes_checkbox">exchange points</input> -->
@@ -345,7 +440,7 @@ add destination address marker with popup showing the tracker
 
 
 var map = L.mapbox.map('map', 'mapbox.streets')
-    .setView([40, -74.50], 9);
+    .setView([45.50, -73.567],5);
 
 var geocoder = L.mapbox.geocoder('mapbox.places')
 
@@ -376,6 +471,14 @@ function readLocation(geoJSON) {
 	//console.log(returnPart.join());
 	return returnPart.join();
 }
+
+// var geocoder = L.mapbox.geocoder('mapbox.places');
+
+// var geoCode = geocoder.query('Montreal',function(err, data){
+// 	console.log(data);
+// });
+
+// console.log(geoCode);
 
 // function locationQuery(lat_,lng_) {
 // 	geocoder.reverseQuery(
@@ -434,7 +537,10 @@ function addRoute(route){
 	routes.push(route);
 	route_box = $('<div>')
 		.attr("id","route-"+id)
-		.attr("class","route");
+		.attr("class","routeBox");
+	var title = $('<div>');
+	title.html('Route: '+(routes.length - 1));
+	title.appendTo(route_box);
 
 	var url = $('<span>').html('URL: ' + route.url);
 	var description = $('<span>').html(' / description: ' + route.description);
@@ -450,7 +556,7 @@ function addRoute(route){
 	co2.appendTo(general);
 	general.appendTo(route_box);
 
-	table = $('<table>');
+	var table = $('<table>');
 	th = $('<thead>');
 	td = $('<th>').html('#').appendTo(th);
 	td = $('<th>').html('IP').appendTo(th);
@@ -468,7 +574,6 @@ function addRoute(route){
 	for(var p = 0; p < route.points.length; p++){
 		var point = route.points[p];
 		row = $('<tr>');
-
 		td = $('<td>').html(p).appendTo(row);
 		td = $('<td>').html(point.ip).appendTo(row);
 		td = $('<td>').html(point.location).appendTo(row);
@@ -486,13 +591,40 @@ function addRoute(route){
 			type = 'route_start';
 		else if(p == (route.points.length - 1))
 			type = 'route_destination';
-		createMarker(type,point.coordinate,false,false);
+		var marker = createMarker(type,point.coordinate,false,false);
+		console.log(row);
+		console.log(row.html());
+		marker.bindPopup('<table> <thead>' + th.html() + ' </thead> '+row.html() + '</table>');
 	}
-	// console.log(coords);
-	route_polyline = L.polyline(coords,  {color: next_route_color()}).addTo(map);
 
 	table.appendTo(route_box);
 
+	var tr_table = $('<table>');
+	th = $('<thead>');
+	td = $('<th>').html('#').appendTo(th);
+	td = $('<th>').html('Tracker name').appendTo(th);
+	td = $('<th>').html('Company').appendTo(th);
+	td = $('<th>').html('Nationality').appendTo(th);
+	th.appendTo(tr_table)
+
+	if('trackers' in route){
+		// console.log('found! ' + route.trackers.length);
+		for(var p = 0; p < route.trackers.length - 1; p++){
+			var tracker = route.trackers[p];
+			row = $('<tr>');
+			td = $('<td>').html(p).appendTo(row);
+			td = $('<td>').html(tracker.tracker_name).appendTo(row);
+			td = $('<td>').html(tracker.company).appendTo(row);
+			td = $('<td>').html(tracker.nationality).appendTo(row);
+			row.appendTo(tr_table);
+		}
+	}
+
+	tr_table.appendTo(route_box);
+
+	// console.log(coords);
+	route_polyline = L.polyline(coords,  {color: next_route_color()}).addTo(map);
+	route_polyline.bindPopup('<p>Route:'+ id +'</p>')
 	route_box.appendTo(routes_box);
 	// console.log('route added');
 }

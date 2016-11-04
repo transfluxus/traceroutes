@@ -8,8 +8,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-def whatever():
-	return 'cool'
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -20,7 +19,10 @@ def getRoutes():
     files = os.listdir("routes")
     now = datetime.now()
     return_routes = []
+    # print files
     for file in files:
+        if not file.startswith('r-'):
+            continue
         # print file[2:-5]
         file_time = datetime.strptime(file[2:-5],'%y%m%d-%H%M%S')
         if (now - file_time).days < 1:
@@ -29,6 +31,11 @@ def getRoutes():
                 return_routes.append(json.loads(f.read()))
     print 'returning',len(return_routes),'routes'
     return json.dumps(return_routes)
+
+# @app.route('/archive_routes',methods=['GET'])
+# def getRoutes():
+#     files = os.listdir("routes")
+
 
 @app.route('/collect',methods=['GET'])
 def collect():
@@ -49,8 +56,11 @@ def input():
         # print url, description, total_km, datasize, co2
         points = json.loads(values['points'])
         val_dict = values.to_dict()
-        val_dict['points'] = points
-        val_json = json.dumps(val_dict)        
+        val_dict['points'] = points       
+
+        trackers = json.loads(values['trackers'])
+        val_dict['trackers'] = trackers
+        val_json = json.dumps(val_dict)   
         # socketio.emit('my response', {'data': val_json}, namesspace = '', broadcast=True)
         socketio.emit('newroute', val_json, broadcast=True)
         # print len(points)
@@ -81,8 +91,13 @@ def test_connect():
 def test_disconnect():
     print 'Client disconnected'
 
+def make_routes_dir():
+    if not os.path.exists('routes'):
+        os.makedirs('routes')
+
 # RUN APP
 if __name__ == "__main__":
+    make_routes_dir()
     app.run(host='0.0.0.0')
     # socketio.run(app, host='0.0.0.0')
     # socketio.run(app,debug=False, host='0.0.0.0', port=8080)
