@@ -16,7 +16,7 @@ def index():
 
 @app.route('/today_routes',methods=['GET'])
 def getRoutes():
-    make_routes_dir()
+    make_dir('routes')
     files = os.listdir("routes")
     now = datetime.now()
     return_routes = []
@@ -33,14 +33,19 @@ def getRoutes():
     print 'returning',len(return_routes),'routes'
     return json.dumps(return_routes)
 
-# @app.route('/archive_routes',methods=['GET'])
-# def getRoutes():
-#     files = os.listdir("routes")
-
-
-@app.route('/collect',methods=['GET'])
-def collect():
-    return render_template('collect.html')
+@app.route('/archive_routes',methods=['GET'])
+def archive_routes():
+    make_dir('archived_routes')
+    files = os.listdir("routes")
+    # print files
+    for file in files:
+        if not file.startswith('r-'):
+            continue
+        os.rename("routes/"+file, "archived_routes/"+file)
+    return render_template('index.html')
+# @app.route('/collect',methods=['GET'])
+# def collect():
+#     return render_template('collect.html')
 
 @app.route('/newroute', methods=["POST"])
 def input():
@@ -92,13 +97,13 @@ def test_connect():
 def test_disconnect():
     print 'Client disconnected'
 
-def make_routes_dir():
-    if not os.path.exists('routes'):
-        os.makedirs('routes')
+def make_dir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
 
 # RUN APP
 if __name__ == "__main__":
-    make_routes_dir()
     app.run(host='0.0.0.0')
     # socketio.run(app, host='0.0.0.0')
     # socketio.run(app,debug=False, host='0.0.0.0', port=8080)

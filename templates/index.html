@@ -365,7 +365,7 @@ add destination address marker with popup showing the tracker
 		marker_menu_enable(false);
 	}
 
-	L.mapbox.accessToken = 'pk.eyJ1IjoicmFtaW4zNiIsImEiOiJjaWlvdm9mbzMwMDZsdnZrc3JpN2Q2MjlxIn0.6OOBFu5I20Q2IbK_4ZJq7Q';
+	L.mapbox.accessToken = 'pk.eyJ1IjoicmFtaW4zNiIsImEiOiJjaXY1ODdlcjIwMTdiMm9uMGcyNjdjZGphIn0.7Dd6vr8zEdXt4d5zWCcDWA';
 
 </script>
 <div id='map'></div>  
@@ -592,8 +592,8 @@ function addRoute(route){
 		else if(p == (route.points.length - 1))
 			type = 'route_destination';
 		var marker = createMarker(type,point.coordinate,false,false);
-		console.log(row);
-		console.log(row.html());
+		// console.log(row);
+		// console.log(row.html());
 		marker.bindPopup('<table> <thead>' + th.html() + ' </thead> '+row.html() + '</table>');
 	}
 
