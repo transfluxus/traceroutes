@@ -563,7 +563,6 @@ function addRoute(route){
 
 
 function ixp_visible() {
-	console.log($('#exchange_nodes_checkbox').prop('checked'));
 	var checked = $('#exchange_nodes_checkbox').prop('checked');
 	if(!checked){
 		for(ixp in ixps_layers){
@@ -574,8 +573,4 @@ function ixp_visible() {
 			ixps_layers[ixp].addTo(map);
 		}
 	}
-// 	map.featureLayer.setFilter(function(f) {
-// 		// Returning true for all markers shows everything.
-// 		return false;
-// });
 }
