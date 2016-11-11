@@ -34,8 +34,9 @@ $.ajax({
     dataType: "json",
     success: function(data) {
     	for(ixp  in data.features) {
-    		var description = ''
+    		var description = '<b>Internet Exchange Point (IXP) </b><br>'
     		for (ex in data.features[ixp].properties.exchanges){
+
     			description += data.features[ixp].properties.exchanges[ex].slug + '<br>';
     		}
     		var url = data.features[ixp].properties.exchanges[ex].url;
