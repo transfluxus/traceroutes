@@ -8,6 +8,8 @@ var temp_route_marker = [];
 var temp_route_polyline = null;
 var routes = [];
 
+var ixps_layers = [];
+
 // get the map tiles
 $.ajax({
     url: "/at",
@@ -33,12 +35,14 @@ $.ajax({
     async: true,
     dataType: "json",
     success: function(data) {
+			ixps = data.features;
     	for(ixp  in data.features) {
     		var description = '<b>Internet Exchange Point (IXP) </b><br>'
     		for (ex in data.features[ixp].properties.exchanges){
 
     			description += data.features[ixp].properties.exchanges[ex].slug + '<br>';
     		}
+				// console.log(data.features[ixp]);
     		var url = data.features[ixp].properties.exchanges[ex].url;
     		description += ($('<div>').append($('<a>').attr('href',url).attr('target',"_blank").html(url))).html();
     		data.features[ixp].properties.description = description;
@@ -53,6 +57,7 @@ $.ajax({
     onEachFeature: function (feature, layer) {
         layer.bindPopup(feature.properties.description);
 				layer.type = 'ixp';
+				feature.properties.type = 'ixp';
 				layer.on("dblclick", function () {
 						if(temp_route_marker.length > 0){
 							var marker = temp_route_marker.pop();
@@ -63,9 +68,22 @@ $.ajax({
 						}
 				    return false;
 				});
-    }
+    },
+		// filter : function(feature, layer){
+		// 	return $('#exchange_nodes_checkbox').prop('checked');
+		// }
 }).addTo(map);
-    }
+
+map.eachLayer(function(layer){
+	if(layer.type == 'ixp'){
+		ixps_layers.push(layer);
+	}
+});
+
+  }
+
+
+
 });
 
 
@@ -256,7 +274,7 @@ function route_done() {
 	$("#route_table_body").empty();
 
 	var url = $('#route_url')[0].value;
-	var description = $('#route_description')[0].value;
+	// var description = $('#route_description')[0].value;
 	var total_km = $('#route_total_km')[0].value;
 	var datasize = $('#route_datasize')[0].value;
 	var co2 = $('#route_co2')[0].value;
@@ -278,7 +296,7 @@ function route_done() {
 	// console.log(points);
 	route = {
 		url : url,
-		description : description,
+		// description : description,
 		total_km : total_km,
 		datasize : datasize,
 		co2 : co2,
@@ -289,7 +307,7 @@ function route_done() {
 
 	$.post('/newroute',{
 		url: url,
-		description: description,
+		// description: description,
 		total_km: total_km,
 		datasize: datasize,
 		co2: co2,
@@ -461,14 +479,14 @@ function addRoute(route){
 	title.appendTo(route_box);
 
 	var url = $('<span>').html('URL: ' + route.url);
-	var description = $('<span>').html(' / description: ' + route.description);
+	// var description = $('<span>').html(' / description: ' + route.description);
 	var total_km = $('<span>').html(' / Total km: ' + route.total_km);
 	var datasize = $('<span>').html(' / Data size: ' + route.datasize);
 	var co2 = $('<span>').html(' / CO2: ' + route.co2);
 
 	var general = $('<div>');
 	url.appendTo(general);
-	description.appendTo(general);
+	// description.appendTo(general);
 	total_km.appendTo(general);
 	datasize.appendTo(general);
 	co2.appendTo(general);
@@ -541,4 +559,23 @@ function addRoute(route){
 	route_polyline.bindPopup('<p>Route:'+ id +'</p>')
 	route_box.appendTo($('#routes'));
 	// console.log('route added');
+}
+
+
+function ixp_visible() {
+	console.log($('#exchange_nodes_checkbox').prop('checked'));
+	var checked = $('#exchange_nodes_checkbox').prop('checked');
+	if(!checked){
+		for(ixp in ixps_layers){
+			map.removeLayer(ixps_layers[ixp]);
+		}
+	} else {
+		for(ixp in ixps_layers){
+			ixps_layers[ixp].addTo(map);
+		}
+	}
+// 	map.featureLayer.setFilter(function(f) {
+// 		// Returning true for all markers shows everything.
+// 		return false;
+// });
 }
