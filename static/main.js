@@ -7,11 +7,6 @@ var geocoder;
 var temp_route_marker = [];
 var temp_route_polyline = null;
 var routes = [];
-var routes_box = $('#routes');
-
-var temp_route_data;
-
-var tm = null;
 
 // get the map tiles
 $.ajax({
@@ -28,7 +23,6 @@ $.ajax({
 
 // get the stored routes from the server
 $.get('/today_routes',function(data){
-	temp_route_data = JSON.parse(data);
 	(JSON.parse(data)).forEach(addRoute);
 });
 
@@ -277,7 +271,6 @@ function route_done() {
 		trackers.push(tracker);
 		// console.log(tracker);
 	}
-
 	$('#tracker_table_body').empty();
 	// console.log(JSON.stringify(trackers));
 	// console.log(trackers);
@@ -305,6 +298,25 @@ function route_done() {
 	},function(){
 		console.log('new route sent');
 	});
+}
+
+function route_cancel(){
+	route_menu_enable(false);
+
+	for(var m = 0; m < temp_route_marker.length; m++) {
+		var router_marker = temp_route_marker[m];
+		if(router_marker.type == 'dynamic_route_point'){
+			map.removeLayer(temp_route_marker[m]);
+		}
+	}
+
+	temp_route_marker = [];
+	update_route_polyline();
+	temp_route_polyline = null;
+	// $(".route-point-descr").remove();
+	$("#route_table_body").empty();
+
+	$('#tracker_table_body').empty();
 }
 
 function route_menu_enable(enable) {
@@ -526,6 +538,6 @@ function addRoute(route){
 	// console.log(coords);
 	route_polyline = L.polyline(coords,  {color: next_route_color()}).addTo(map);
 	route_polyline.bindPopup('<p>Route:'+ id +'</p>')
-	route_box.appendTo(routes_box);
+	route_box.appendTo($('#routes'));
 	// console.log('route added');
 }
