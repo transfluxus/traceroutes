@@ -1,4 +1,4 @@
-<!-- 
+<!--
 TODOS:
 add tracker to route creation
 add destination address marker with popup showing the tracker
@@ -8,628 +8,67 @@ add destination address marker with popup showing the tracker
 <html>
 <head>
 	<meta charset="utf-8"/>
-	<title></title>
+	<title>Traceroutes</title>
 
-	<!-- <script src='https://code.jquery.com/jquery-2.2.3.min.js'></script> -->
-	<script src="{{ url_for('static', filename='jquery-2.1.0.min.js')}}"></script>
-
-	<!-- <script src='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.js'></script>  -->
-	<script src="{{ url_for('static', filename='mapbox.js')}}"></script> 
-
-	<!-- <link href='https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css' rel='stylesheet' /> -->
 	<link href="{{ url_for('static', filename='mapbox.css')}}" rel='stylesheet' />
 
-	<script src="{{ url_for('static', filename='Colour.js')}}"></script> 
-	
-	
-	<style type="text/css">
-		#map { 
-		  	position:relative; 
-		  	height: 600px;
-		  	margin-bottom: 10px;
-		  }
+	<link href="{{ url_for('static', filename='style.css')}}" rel='stylesheet' />
 
-		  .input_box {
-		  	border: 2px solid black;
-		  	border-radius: 8px;
-		  	padding: 10px;
-		  	display: inline-block;
-		  	margin: 15px;
-		  }
-
-		  .coord_input {
-		  	max-width: 50px;
-		  }
-
-		  #route_input {
-		    position: relative;
-		    /* top: -124px; */
-		  }
-
-		  #marker_input {
-		  }
-
-		  #route_input {
-		  }
-
-		  .route_main_row {
-		  	background-color: #A0A0A0;
-		  }
-
-		  .routeBox {
-		  	border: 1px solid black;
-		  	border-radius: 8px;
-		  	padding: 10px;
-		  	display: inline-block;
-		  	margin: 15px;		  	
-		  }				
-	</style>
-
+	<script src="{{ url_for('static', filename='jquery-2.1.0.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='mapbox.js')}}"></script>
+	<script src="{{ url_for('static', filename='Colour.js')}}"></script>
 </head>
 <body>
-<script type="text/javascript">
-	function add_route() {
-		route_menu_enable(true);
-		// var clr = next_route_color();
-		// console.log(clr);
-		temp_route_polyline = L.polyline([],  {color: 'red'}).addTo(map);
-		add_route_point();
-	}
 
-	function add_route_point() {
-		var index = create_route_input();
-		var route_marker = createMarker("route_point",undefined,true);//; create_route_marker(index); 
-		temp_route_marker.push(route_marker);
-		temp_route_polyline.addLatLng([
-			route_marker.getLatLng().lat,
-			route_marker.getLatLng().lng]);
-		route_marker.on("drag",function() {
-			update_route_polyline();
-		});
-		return route_marker;
-	}
-
-	var lastHue = 0;
-	function next_route_color(){
-		var clr = new HSLColour(lastHue, 100, 50);
-		// console.log(clr);
-		// console.log(clr.getCSSHexadecimalRGB());
-		lastHue = (lastHue + 222.5) % 360;
-		return clr.getCSSHexadecimalRGB();
-	}
-
-	function update_route_polyline() {
-		latlngs = [];
-		for(var m = 0; m < temp_route_marker.length; m++) {
-			latlngs.push([
-				temp_route_marker[m].getLatLng().lat,
-				temp_route_marker[m].getLatLng().lng]);
-		}
-		temp_route_polyline.setLatLngs(latlngs);
-	}
-
-	function input_location_key(field) {
-		console.log('key');
-		console.log(field.attr('id'));
-	}
-
-	function create_input_field(id_ext){
-		var length = $("#route_table > tbody > tr").length;
-		var td = $("<td>");	
-		var td_in = $("<input>")
-			.attr("id","route_point_"+(length-1)+'_'+id_ext)
-			.appendTo(td);
-		// if(id_ext == 'location'){
-		// 		td.bind('keypress', function(e) {
-		// 			console.log(e.keyCode);
-		// 			console.log(e);
-		// 		});
-			// td_in.attr('onkeypress','input_location_key('+("route_point_"+(length-1)+'_'+id_ext)+')');
-		// }
-		return td;
-	}
-
-	function create_route_input() {
-		var table = $("#route_table > tbody > tr");
-		var length = $("#route_table > tbody > tr").length;
-		var line = $("<tr>")
-			.attr("id","route-row-"+length)
-			.attr("class","route-point-descr");
-		// number
-		$("<td>"+length+"</td>")
-			.attr("align","center")
-			.appendTo(line);
-		create_input_field('ip').appendTo(line);
-		create_input_field('location').appendTo(line);
-		create_input_field('isp').appendTo(line);
-		create_input_field('isp_nationality').appendTo(line);
-		create_input_field('cable_name').appendTo(line);
-		create_input_field('port').appendTo(line);
-		create_input_field('nsp').appendTo(line);
-		create_input_field('nsp_nationality').appendTo(line);
-
-		line.appendTo($("#route_table_body"));
-		return length;
-	}
-
-	function add_tracker() {
-		var index = create_tracker_input();
-	}
-
-	function create_tracker_input() {
-		var table = $("#tracker_table > tbody > tr");
-		var length = $("#tracker_table > tbody > tr").length - 1;
-		var line = $("<tr>")
-			.attr("id","tracker-row-"+length);
-			// .attr("class","route-point-descr");
-		// number
-		$("<td>"+length+"</td>")
-			.attr("align","center")
-			.appendTo(line);
-		tracker_create_input_field('tracker_name').appendTo(line);
-		tracker_create_input_field('company').appendTo(line);
-		tracker_create_input_field('nationality').appendTo(line);
-		line.appendTo($("#tracker_table_body"));
-		return length;
-	}
-
-	function tracker_create_input_field(id_ext){
-		var length = $("#tracker_table > tbody > tr").length;
-		var td = $("<td>");	
-		var td_in = $("<input>")
-			.attr("id","tracker_"+(length-1)+'_'+id_ext)
-			.appendTo(td);
-		return td;
-	}
-
-	// function create_route_marker(id) {
-	// 	var route_marker = createMarker("route_point",undefined,true);
-	// 	var coordinate = route_marker.getLatLng();
-	// 	$("#route_point_"+id+"lat").val(coordinate.lat);
-	// 	$("#route_point_"+id+"lng").val(coordinate.lng);
-	// 	route_marker.on("drag",function() {
-	// 		$("#route_point_"+id+"lat").val(route_marker.getLatLng().lat);
-	// 		$("#route_point_"+id+"lng").val(route_marker.getLatLng().lng);	
-	// 		update_route_polyline();
-	// 	});
-	// 	return route_marker;
-	// }
-
-
-	function route_done() {
-
-		var points = []
-		route_menu_enable(false);
-		for(var m = 0; m < temp_route_marker.length; m++) {
-			var router_marker = temp_route_marker[m];
-			router_marker.setIcon(get_icon(router_marker.type,false));
-			router_marker.dragging.disable();
-			var point = {}
-			point['ip'] = $('#route_point_'+m+'_ip')[0].value;
-			point['location'] = $('#route_point_'+m+'_location')[0].value;
-			point['isp'] = $('#route_point_'+m+'_isp')[0].value;
-			point['isp_nationality'] = $('#route_point_'+m+'_isp_nationality')[0].value;
-			point['cable_name'] = $('#route_point_'+m+'_cable_name')[0].value;
-			point['port'] = $('#route_point_'+m+'_port')[0].value;
-			point['nsp'] = $('#route_point_'+m+'_nsp')[0].value;
-			point['nsp_nationality'] = $('#route_point_'+m+'_nsp_nationality')[0].value;
-
-			point['coordinate'] = [router_marker.getLatLng().lat, router_marker.getLatLng().lng];
-			points.push(point);
-			map.removeLayer(temp_route_marker[m]);
-		}
-		temp_route_marker = [];
-		temp_route_polyline = null;
-		$(".route-point-descr").remove();
-
-		var url = $('#route_url')[0].value; 
-		var description = $('#route_description')[0].value;
-		var total_km = $('#route_total_km')[0].value;
-		var datasize = $('#route_datasize')[0].value;
-		var co2 = $('#route_co2')[0].value;
-
-		var tracker_no = $("#tracker_table_body tr").length;
-		console.log('number of trackers');
-		var trackers = [];
-		for(var t = 1; t <= tracker_no; t++) {
-			var tracker = {}
-			tracker['tracker_name'] = $('#tracker_'+t+'_tracker_name')[0].value;
-			tracker['company'] = $('#tracker_'+t+'_company')[0].value;
-			tracker['nationality'] = $('#tracker_'+t+'_nationality')[0].value;
-			trackers.push(tracker);
-			// console.log(tracker);
-		}
-
-		$('#tracker_table_body').empty();
-		// console.log(JSON.stringify(trackers));
-		// console.log(trackers);
-		// console.log(points);
-		route = {
-			url : url,
-			description : description,
-			total_km : total_km,
-			datasize : datasize,
-			co2 : co2,
-			points : points,
-			trackers : trackers
-		};
-		addRoute(route);
-
-		$.post('/newroute',{
-			url: url,
-			description: description,
-			total_km: total_km,
-			datasize: datasize,
-			co2: co2,
-			points: JSON.stringify(points),
-			trackers : JSON.stringify(trackers)
-			// color: temp_route_color
-		},function(){
-			console.log('new route sent');
-		});
-	}
-
-	function route_menu_enable(enable) {
-		$("#input_add_route").prop('disabled', enable);
-		$(".route_option").prop('disabled', !enable);
-		if(enable) {
-			$("#input_add_marker").prop('disabled',true);
-		} else {
-			$("#input_add_marker").prop('disabled',false);
-		}
-	}	
-	function marker_menu_enable(enable) {
-		$("#input_add_marker").prop('disabled', enable);
-		$(".marker_option").prop('disabled', !enable);
-		if(enable) {
-			$("#input_add_route").prop('disabled',true);
-		} else {
-			$("#input_add_route").prop('disabled',false);
-		}
-	}		
-
-	function createMarker(type, coordinate, temporary) {
-		if (coordinate === undefined)
-			coordinate = map.getCenter();
-		if (temporary === undefined)
-			temporary = true;
-		// console.log(coordinate);
-		var marker = L.marker(coordinate, {
-		    icon: get_icon(type,temporary),
-		    draggable: temporary,
-		}).addTo(map);
-		marker.type = type;
-		// marker.bindPopup("<b>Hello world!</b><br>I am a popup.");
-		return marker;
-	}
-	 
-	// function add_marker() {
-	// 	marker_menu_enable(true);
-	// 	tempMarker = createMarker("tracker");
-	// 	var coordinate = tempMarker.getLatLng();
-	// 	$("#marker_type_tracker").prop('checked', true);
-	// 	$("#marker_latitude").val(coordinate.lat);
-	// 	$("#marker_longitude").val(coordinate.lng);
-	// 	tempMarker.on("drag",function() {
-	// 		$("#marker_latitude").val(tempMarker.getLatLng().lat);
-	// 		$("#marker_longitude").val(tempMarker.getLatLng().lng);	
-	// 	});
-	// }
-
-
-	L.Marker.prototype.setType = function(type) {
-			this.type = type;
-			// if(type == 'route_point') {
-			this.setIcon(get_icon(type,true));
-			// }
-	}
-
-	function set_marker_type(type) {
-		if(tempMarker != null) {
-			tempMarker.setType(type);
-		}
-	}
-
-	function get_icon(type,is_temp) {
-		if(is_temp === undefined)
-			is_temp = false;
-		var color = is_temp ? "#fa0" : "#a0a0a0";
-		var icon = "prison"; //tracker
-		//if (type == "tracker")
-		if (type == "cookie") {
-			icon = "roadblock";
-		} else if(type == "route_point") {
-			icon = "circle";
-		} else if(type == 'route_start'){
-			icon = 'campsite'
-		} else if(type == 'route_destination'){
-			icon = 'star'
-		}
-
-		return L.mapbox.marker.icon({
-		        'marker-size': 'medium',
-		        'marker-symbol': icon,
-		        'marker-color': color,
-		    });
-	}
-
-	function marker_done() {
-		tempMarker.setIcon(get_icon(tempMarker.type,false));
-		tempMarker.dragging.disable();
-
-		// var lat_ = $("#marker_latitude").val();
-		// var lng_ = $("#marker_longitude").val();
-		//console.log(lat_,lng_);
-		var location = "";
-		// locationQuery(lat_,lng_);
-		marker_menu_enable(false);
-	}
-
-	L.mapbox.accessToken = 'pk.eyJ1IjoicmFtaW4zNiIsImEiOiJjaXY1ODdlcjIwMTdiMm9uMGcyNjdjZGphIn0.7Dd6vr8zEdXt4d5zWCcDWA';
-
-</script>
-<div id='map'></div>  
-
-
-<div id="route_input" class="input_box">
-	<button type="input_add_route" id="input_add_route" value="add marker" onclick="add_route()">add route</button>
-	<p>
-		URL<input id="route_url" class="route_option" disabled> </input> 
-		Description <input id="route_description" class="route_option" disabled> </input>
-		Total distance <input id="route_total_km" class="route_option" disabled> </input>
-		datasize (Kb)<input id="route_datasize" class="route_option" disabled> </input>
-		CO2 (gr)<input id="route_co2" class="route_option" disabled> </input>
-	<p>
-	
-	<table border="1" id="route_table">
-		<thead class="route_main_row">
-			<td>#</td>
-			<td>IP</td>
-			<!-- <td>Latitude</td> <td>Longitude</td> -->
-			<td>Location</td>
-			<td>ISP</td>
-			<td>ISP-Nationality</td>
-			<td>Cable Name</td>
-			<td>Port In/Out</td>
-			<td>NSP</td>
-			<td>NSP-Nationality</td>
-		</thead>
-		<tbody id="route_table_body">
-
-		</tbody>
-		<tr id="add_route_point_row" class="route_main_row">
-			<td align="center">
-				<button class="route_option" onclick="add_route_point()" disabled>+</button>
-			</td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td align="center">
-				<button class="route_option" id="" disabled onclick="route_done()">Done</button>
-			</td>
-		</tr>
-		
-	</table>
-	<table id='tracker_table' style='margin-top: 10px' border="1">
-		<thead class="route_main_row" >
-			<td>#</td>
-			<td>Tracker Name</td>
-			<td>Company</td>
-			<td>Nationality</td>
-		</thead>	
-		<tbody id="tracker_table_body">		
-		</tbody>
-		<tr class="route_main_row">	
-			<td>
-				<button class="route_option" onclick="add_tracker()" disabled>+</button>
-			</td>
-			<td></td>
-			<td></td>
-			<td></td>	
-		<tr>
-	</table>
-</div>
-<div id='routes'></div>
-<!-- <input type="checkbox" id="exchange_nodes_checkbox" name="exchange_nodes_checkbox" value="exchange_nodes_checkbox">exchange points</input> -->
-<script> 
-
-
-var map = L.mapbox.map('map', 'mapbox.streets')
-    .setView([45.50, -73.567],5);
-
-var geocoder = L.mapbox.geocoder('mapbox.places')
-
-var temp_route_marker = [];
-var temp_route_polyline = null;
-// var temp_route_color = null;
-
-
-
-//var trackerIcon = get_icon("tracker");
-
-
-function readLocation(geoJSON) {
-	// concat neighborhood,place,region,country
-	var contexts = geoJSON.features[0].context;
-	var searches = ["neighborhood","place","region","country"];
-	var returnPart = ["","","",""];
-	for(var c = 0; c < contexts.length; c++) {
-		var id = contexts[c].id;
-		//console.log(id);
-		for(var s = 0; s < searches.length; s++) {
-			if(id.startsWith(searches[s])) {
-				//console.log("found: "+searches[s]+ " > "+contexts[c].text);
-				returnPart[s] = " "+contexts[c].text;
-			}
-		}
-	}
-	//console.log(returnPart.join());
-	return returnPart.join();
-}
-
-// var geocoder = L.mapbox.geocoder('mapbox.places');
-
-// var geoCode = geocoder.query('Montreal',function(err, data){
-// 	console.log(data);
-// });
-
-// console.log(geoCode);
-
-// function locationQuery(lat_,lng_) {
-// 	geocoder.reverseQuery(
-// 		{lat:lat_,lng:lng_},
-// 		function(err, data) {
-// 			if(err !== null) {
-// 				console.log(err);
-// 			}
-// 			if(data !== null) {
-// 				location = readLocation(data);
-// 				//console.log(JSON.stringify(latest));	
-// 			}
-// 			// need the data in order to finnish popup. 
-// 			tempMarker.bindPopup("<p>"+tempMarker.type+"<br>"
-// 				+$("#marker_description").val()
-// 				+"<br>IP: "+$("#marker_IP").val()
-// 				+"<br>location:"+location+"</p>");
-// 				// reset all values to ""
-// 				$(".marker_value").val("");
-// 				// and clear tempMarker
-// 				tempMarker = null; 
-// 		});
-// }
-
-function showMap(err, data) {
-    if (data.lbounds) {
-        map.fitBounds(data.lbounds);
-    } else if (data.latlng) {
-        map.setView([data.latlng[0], data.latlng[1]], 13);
-    }
-}
-
-// map.eachLayer(function(layer){
-// 	console.log(layer);
-// });
-
-var routes = [];		
-var routes_box = $('#routes');
-
-var temp_route_data;
-
-$.get('/today_routes',function(data){
-	// console.log(data);
-	temp_route_data = JSON.parse(data);
-	(JSON.parse(data)).forEach(addRoute);
-	// for (var i in JSON.parse(data)){
-	// 	console.log(route)
-	// 	addRoute(route);
-	// }
-});
-
-function addRoute(route){
-
-	// console.log(route);
-	var id = routes.length;
-	routes.push(route);
-	route_box = $('<div>')
-		.attr("id","route-"+id)
-		.attr("class","routeBox");
-	var title = $('<div>');
-	title.html('Route: '+(routes.length - 1));
-	title.appendTo(route_box);
-
-	var url = $('<span>').html('URL: ' + route.url);
-	var description = $('<span>').html(' / description: ' + route.description);
-	var total_km = $('<span>').html(' / Total km: ' + route.total_km);
-	var datasize = $('<span>').html(' / Data size: ' + route.datasize);
-	var co2 = $('<span>').html(' / CO2: ' + route.co2);
-
-	var general = $('<div>');
-	url.appendTo(general);
-	description.appendTo(general);
-	total_km.appendTo(general);
-	datasize.appendTo(general);
-	co2.appendTo(general);
-	general.appendTo(route_box);
-
-	var table = $('<table>');
-	th = $('<thead>');
-	td = $('<th>').html('#').appendTo(th);
-	td = $('<th>').html('IP').appendTo(th);
-	td = $('<th>').html('Location').appendTo(th);
-	td = $('<th>').html('ISP').appendTo(th);
-	td = $('<th>').html('ISP nationality').appendTo(th);
-	td = $('<th>').html('Cable name').appendTo(th);
-	td = $('<th>').html('port in/out').appendTo(th);
-	td = $('<th>').html('NSP').appendTo(th);
-	td = $('<th>').html('NSP nationality').appendTo(th);
-	th.appendTo(table)
-	coords = [];
-
-	// console.log(route.points);
-	for(var p = 0; p < route.points.length; p++){
-		var point = route.points[p];
-		row = $('<tr>');
-		td = $('<td>').html(p).appendTo(row);
-		td = $('<td>').html(point.ip).appendTo(row);
-		td = $('<td>').html(point.location).appendTo(row);
-		td = $('<td>').html(point.isp).appendTo(row);
-		td = $('<td>').html(point.isp_nationality).appendTo(row);
-		td = $('<td>').html(point.cable_name).appendTo(row);
-		td = $('<td>').html(point.port).appendTo(row);
-		td = $('<td>').html(point.nsp).appendTo(row);
-		td = $('<td>').html(point.nsp_nationality).appendTo(row);			
-		row.appendTo(table);
-		coords.push(point.coordinate);
-		type = 'route_point';
-
-		if(p == 0)
-			type = 'route_start';
-		else if(p == (route.points.length - 1))
-			type = 'route_destination';
-		var marker = createMarker(type,point.coordinate,false,false);
-		// console.log(row);
-		// console.log(row.html());
-		marker.bindPopup('<table> <thead>' + th.html() + ' </thead> '+row.html() + '</table>');
-	}
-
-	table.appendTo(route_box);
-
-	var tr_table = $('<table>');
-	th = $('<thead>');
-	td = $('<th>').html('#').appendTo(th);
-	td = $('<th>').html('Tracker name').appendTo(th);
-	td = $('<th>').html('Company').appendTo(th);
-	td = $('<th>').html('Nationality').appendTo(th);
-	th.appendTo(tr_table)
-
-	if('trackers' in route){
-		// console.log('found! ' + route.trackers.length);
-		for(var p = 0; p < route.trackers.length - 1; p++){
-			var tracker = route.trackers[p];
-			row = $('<tr>');
-			td = $('<td>').html(p).appendTo(row);
-			td = $('<td>').html(tracker.tracker_name).appendTo(row);
-			td = $('<td>').html(tracker.company).appendTo(row);
-			td = $('<td>').html(tracker.nationality).appendTo(row);
-			row.appendTo(tr_table);
-		}
-	}
-
-	tr_table.appendTo(route_box);
-
-	// console.log(coords);
-	route_polyline = L.polyline(coords,  {color: next_route_color()}).addTo(map);
-	route_polyline.bindPopup('<p>Route:'+ id +'</p>')
-	route_box.appendTo(routes_box);
-	// console.log('route added');
-}
-
-</script>
-
+	<div id='map'></div>
+	<div id="route_input" class="input_box">
+		<button type="input_add_route" id="input_add_route" value="add marker" onclick="init_route()">add route</button>
+		<button class="route_option" id="" disabled onclick="route_done()">Done</button>
+		<p>
+			URL<input id="route_url" class="route_option" disabled> </input>
+			Description <input id="route_description" class="route_option" disabled> </input>
+			Total distance <input id="route_total_km" class="route_option" disabled> </input>
+			datasize (Kb)<input id="route_datasize" class="route_option" disabled> </input>
+			CO2 (gr)<input id="route_co2" class="route_option" disabled> </input>
+		<p>
+		<table border="1" id="route_table">
+			<thead class="route_main_row">
+				<td>#</td>
+				<td>IP</td>
+				<td>Location</td>
+				<td>ISP</td>
+				<td>ISP-Nationality</td>
+				<td>Cable Name</td>
+				<td>Port In/Out</td>
+				<td>NSP</td>
+				<td>NSP-Nationality</td>
+			</thead>
+			<tbody id="route_table_body">
+			</tbody>
+			<tr id="add_route_point_row" class="route_main_row">
+				<td align="center">
+					<button class="route_option" onclick="add_route_point()" disabled>+</button>
+				</td>
+			</tr>
+		</table>
+		<table id='tracker_table' style='margin-top: 10px' border="1">
+			<thead class="route_main_row" >
+				<td>#</td>
+				<td>Tracker Name</td>
+				<td>Company</td>
+				<td>Nationality</td>
+			</thead>
+			<tbody id="tracker_table_body">
+			</tbody>
+			<tr class="route_main_row">
+				<td>
+					<button class="route_option" onclick="create_tracker_input()" disabled>+</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id='routes'></div>
+	<input type="checkbox" id="exchange_nodes_checkbox" name="exchange_nodes_checkbox" value="exchange_nodes_checkbox">exchange points</input>
+	<script src="{{ url_for('static', filename='main.js')}}"></script>
 </body>
 </html>

@@ -5,7 +5,8 @@ from flask.ext.socketio import SocketIO, emit
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
+# app.config['SECRET_KEY'] = 'secret!'
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 socketio = SocketIO(app)
 
 
@@ -87,6 +88,14 @@ def input():
     # return http_calls.input(inputS)
     return '{}';
 
+@app.route('/at',methods=['GET'])
+def access_token():
+    return '{"name": "accessToken","t" : "pk.eyJ1IjoicmFtaW4zNiIsImEiOiJjaXY1ODdlcjIwMTdiMm9uMGcyNjdjZGphIn0.7Dd6vr8zEdXt4d5zWCcDWA"}'
+
+@app.route('/ixp',methods=['GET'])
+def exchange_points():
+    with open('data/exchange_nodes.json') as f:
+        return f.read()
 
 @socketio.on('connect', namespace='')
 def test_connect():
@@ -104,6 +113,6 @@ def make_dir(dir):
 
 # RUN APP
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',debug=True)
     # socketio.run(app, host='0.0.0.0')
     # socketio.run(app,debug=False, host='0.0.0.0', port=8080)
