@@ -6,24 +6,31 @@ add destination address marker with popup showing the tracker
 
 <!DOCTYPE html>
 <html>
+
 <head>
-	<meta charset="utf-8"/>
+	<meta charset="utf-8" />
 	<title>Traceroutes</title>
 
 	<link href="{{ url_for('static', filename='mapbox.css')}}" rel='stylesheet' />
-
 	<link href="{{ url_for('static', filename='style.css')}}" rel='stylesheet' />
 
+	<!--  -->
 	<script src="{{ url_for('static', filename='jquery-2.1.0.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='mapbox.js')}}"></script>
 	<script src="{{ url_for('static', filename='Colour.js')}}"></script>
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<!--  Markercluster -->
+	<!-- <script src="{{ url_for('static', filename='leaflet.markercluster.js')}}"></script>
+	<link rel="shortcut icon" href="{{ url_for('static', filename='MarkerCluster.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='MarkerCluster.Default.css') }}"> -->
+
 </head>
+
 <body>
 
 	<div id='map'></div>
 	<div>
-		<input checked type="checkbox" id="exchange_nodes_checkbox"  onchange="ixp_visible()">exchange points</input>
+		<input checked type="checkbox" id="exchange_nodes_checkbox" onchange="ixp_visible()">Internet Exchange Points</input>
 	</div>
 	<div id="route_input" class="input_box">
 		<button type="input_add_route" id="input_add_route" value="add marker" onclick="init_route()">Add Route</button>
@@ -35,44 +42,45 @@ add destination address marker with popup showing the tracker
 			Total distance <input id="route_total_km" class="route_option" disabled> </input>
 			datasize (Kb)<input id="route_datasize" class="route_option" disabled> </input>
 			CO2 (gr)<input id="route_co2" class="route_option" disabled> </input>
-		<p>
-		<table border="1" id="route_table">
-			<thead class="route_main_row">
-				<td>#</td>
-				<td>IP</td>
-				<td>Location</td>
-				<td>ISP</td>
-				<td>ISP-Nationality</td>
-				<td>Cable Name</td>
-				<td>Port In/Out</td>
-				<td>NSP</td>
-				<td>NSP-Nationality</td>
-			</thead>
-			<tbody id="route_table_body">
-			</tbody>
-			<tr id="add_route_point_row" class="route_main_row">
-				<td align="center">
-					<button class="route_option" onclick="add_route_point()" disabled>+</button>
-				</td>
-			</tr>
-		</table>
-		<table id='tracker_table' style='margin-top: 10px' border="1">
-			<thead class="route_main_row" >
-				<td>#</td>
-				<td>Tracker Name</td>
-				<td>Company</td>
-				<td>Nationality</td>
-			</thead>
-			<tbody id="tracker_table_body">
-			</tbody>
-			<tr class="route_main_row">
-				<td>
-					<button class="route_option" onclick="create_tracker_input()" disabled>+</button>
-				</td>
-			</tr>
-		</table>
+			<p>
+				<table border="1" id="route_table">
+					<thead class="route_main_row">
+						<td>#</td>
+						<td>IP</td>
+						<td>Location</td>
+						<td>ISP</td>
+						<td>ISP-Nationality</td>
+						<td>Cable Name</td>
+						<td>Port In/Out</td>
+						<td>NSP</td>
+						<td>NSP-Nationality</td>
+					</thead>
+					<tbody id="route_table_body">
+					</tbody>
+					<tr id="add_route_point_row" class="route_main_row">
+						<td align="center">
+							<button class="route_option" onclick="add_route_point()" disabled>+</button>
+						</td>
+					</tr>
+				</table>
+				<table id='tracker_table' style='margin-top: 10px' border="1">
+					<thead class="route_main_row">
+						<td>#</td>
+						<td>Tracker Name</td>
+						<td>Company</td>
+						<td>Nationality</td>
+					</thead>
+					<tbody id="tracker_table_body">
+					</tbody>
+					<tr class="route_main_row">
+						<td>
+							<button class="route_option" onclick="create_tracker_input()" disabled>+</button>
+						</td>
+					</tr>
+				</table>
 	</div>
 	<div id='routes'></div>
 	<script src="{{ url_for('static', filename='main.js')}}"></script>
 </body>
+
 </html>
