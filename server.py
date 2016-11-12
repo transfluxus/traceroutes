@@ -5,11 +5,9 @@ from flask.ext.socketio import SocketIO, emit
 import os
 
 app = Flask(__name__)
-# app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = 'secret!'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 socketio = SocketIO(app)
-
-
 
 @app.route('/', methods=['GET'])
 def index():
@@ -34,6 +32,9 @@ def getRoutes():
     print 'returning',len(return_routes),'routes'
     return json.dumps(return_routes)
 
+def get_next_route_id():
+	return len(os.listdir("routes")) - 1;
+
 @app.route('/archive_routes',methods=['GET'])
 def archive_routes():
     make_dir('archived_routes')
@@ -56,29 +57,26 @@ def input():
         # print values
         # print '//////'
         url = values['url']
-        description = values['description']
         total_km = values['total_km']
         datasize = values['datasize']
         co2 = values['co2']
-        # print url, description, total_km, datasize, co2
+        # print url, total_km, datasize, co2
         points = json.loads(values['points'])
         val_dict = values.to_dict()
-        val_dict['points'] = points       
-
+        val_dict['points'] = points
         trackers = json.loads(values['trackers'])
         val_dict['trackers'] = trackers
-        val_json = json.dumps(val_dict)   
-        # socketio.emit('my response', {'data': val_json}, namesspace = '', broadcast=True)
+        val_dict['route_id'] = get_next_route_id()
+        val_json = json.dumps(val_dict)
         socketio.emit('newroute', val_json, broadcast=True)
-        # print len(points)
-        # print '<<<<<<'
         timeStamp = datetime.now().strftime('%y%m%d-%H%M%S')
         with open('routes/r-'+timeStamp+'.json','w') as f:
             f.write(val_json)
+        ret = {'route_id': val_dict['route_id']}
         # print 'p:',points
     except Exception as err:
         print err
-        return '{}'
+        ret = {'route_id': -1}
     # inputS = None
     # try:
     #     inputS = values['url']
@@ -86,7 +84,7 @@ def input():
     #     return jsonify({'status': 'no-input', 'response': whatever()})
     # print inputS
     # return http_calls.input(inputS)
-    return '{}';
+    return jsonify(**ret);
 
 @app.route('/at',methods=['GET'])
 def access_token():
@@ -98,12 +96,12 @@ def exchange_points():
         return f.read()
 
 @socketio.on('connect', namespace='')
-def test_connect():
+def connect():
     print 'client connected'
-    # emit('my response', {'data': 'Connected'})
+    emit('connect', {'data': 'Connected'})
 
 @socketio.on('disconnect', namespace='')
-def test_disconnect():
+def disconnect():
     print 'Client disconnected'
 
 def make_dir(dir):
@@ -113,6 +111,6 @@ def make_dir(dir):
 
 # RUN APP
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',debug=True)
-    # socketio.run(app, host='0.0.0.0')
+    # app.run(host='0.0.0.0',debug=True)
+    socketio.run(app, host='0.0.0.0',debug=True)
     # socketio.run(app,debug=False, host='0.0.0.0', port=8080)

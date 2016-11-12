@@ -9,6 +9,8 @@ var routes = [];
 
 var ixps_layers = [];
 // var ixps_markers;
+var my_last_sent_route_id = undefined;
+// var socket_connected = false;
 
 // get the map tiles
 $.ajax({
@@ -24,8 +26,8 @@ $.ajax({
 });
 
 // get the stored routes from the server
-$.get('/today_routes', function(data) {
-    (JSON.parse(data)).forEach(addRoute);
+$.getJSON('/today_routes', function(data) {
+    data.forEach(addRoute);
 });
 
 // get the internet exchange points
@@ -283,16 +285,17 @@ function route_done() {
 
     $.post('/newroute', {
         url: url,
-        // description: description,
         total_km: total_km,
         datasize: datasize,
         co2: co2,
         points: JSON.stringify(points),
-        trackers: JSON.stringify(trackers)
-            // color: temp_route_color
-    }, function() {
-        console.log('sending route');
-    });
+        trackers: JSON.stringify(trackers),
+    }, function(data) {
+        console.log('route sent');
+				// console.log(data);
+				my_last_sent_route_id = data.route_id;
+    },
+		"json");
 }
 
 function route_cancel() {
@@ -564,4 +567,30 @@ function getUserLocation(){
 	} else {
 			$('#user_location').value = 'get a newer browser'
 	}
+}
+
+function socket_connect(){
+	// TODO allow disconnects
+	// if(socket_connected) {
+	// 	io.disconnect();
+	// 	$('#socketConnectButton').html('Get Routes in Realtime');
+	// } else {
+		var socket = io.connect('http://' + document.domain + ':' + location.port);
+		socket.on('newroute', function(msg) {
+				// console.log(msg);
+				lastMsg = msg;
+				var route = JSON.parse(msg)
+				if(route.route_id !== my_last_sent_route_id) {
+					addRoute(route);
+					console.log('new route received...')
+				} else {
+					console.log('new route rejected. its mine...')
+				}
+		});
+		socket.on('connect', function(msg){
+				console.log('connected');
+				// socket_connected = true;
+				// $('#socketConnectButton').html('deactivate realtime updates');
+		});
+	// }
 }

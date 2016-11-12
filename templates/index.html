@@ -19,6 +19,8 @@ add destination address marker with popup showing the tracker
 	<script src="{{ url_for('static', filename='mapbox.js')}}"></script>
 	<script src="{{ url_for('static', filename='Colour.js')}}"></script>
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+	<script src="{{ url_for('static', filename='socket.io-1.4.5.js')}}"></script>
 <!--  Markercluster -->
 	<!-- <script src="{{ url_for('static', filename='leaflet.markercluster.js')}}"></script>
 	<link rel="shortcut icon" href="{{ url_for('static', filename='MarkerCluster.css') }}">
@@ -33,6 +35,7 @@ add destination address marker with popup showing the tracker
 		<input checked type="checkbox" id="exchange_nodes_checkbox" onchange="ixp_visible()">Internet Exchange Points</input>
 		<button id='getUserLocationButton' onclick='getUserLocation()'>Get my location</button>
 		<input disabled id='user_location'></input>
+		<button id='socketConnectButton' onclick="socket_connect()">Get Routes in Realtime </button>
 	</div>
 	<div id="route_input" class="input_box">
 		<button type="input_add_route" id="input_add_route" value="add marker" onclick="init_route()">Add Route</button>
