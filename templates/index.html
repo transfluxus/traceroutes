@@ -31,6 +31,8 @@ add destination address marker with popup showing the tracker
 	<div id='map'></div>
 	<div>
 		<input checked type="checkbox" id="exchange_nodes_checkbox" onchange="ixp_visible()">Internet Exchange Points</input>
+		<button id='getUserLocationButton'>Get my location</button>
+		<input disabled id='user_location'></input>
 	</div>
 	<div id="route_input" class="input_box">
 		<button type="input_add_route" id="input_add_route" value="add marker" onclick="init_route()">Add Route</button>
@@ -80,6 +82,12 @@ add destination address marker with popup showing the tracker
 				</table>
 	</div>
 	<div id='routes'></div>
+	<hr>
+	Internet Exchange points are taken from the <a href='https://www.telegeography.com/telecom-resources/internet-exchange-map/index.html'>Internet Exchange Map</a> by <a href='https://www.telegeography.com/index.html'>Telegeography</a>  which are licensed under <a href='https://creativecommons.org/licenses/by-nc-nd/3.0/'>(CC BY-NC-ND 3.0)<a> <br>
+	<p>
+		<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+		<br><a href='https://github.com/transfluxus/traceroutes'>Source code</a>
+	</p>
 	<script src="{{ url_for('static', filename='main.js')}}"></script>
 </body>
 

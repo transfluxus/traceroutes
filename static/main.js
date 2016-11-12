@@ -29,6 +29,8 @@ $.get('/today_routes', function(data) {
 });
 
 // get the internet exchange points
+// https://github.com/telegeography/www.internetexchangemap.com
+// https://www.telegeography.com/index.html
 $.ajax({
     url: "/ixp",
     type: "GET",
@@ -409,28 +411,19 @@ function readLocation(geoJSON) {
 
 // console.log(geoCode);
 
-// function locationQuery(lat_,lng_) {
-// 	geocoder.reverseQuery(
-// 		{lat:lat_,lng:lng_},
-// 		function(err, data) {
-// 			if(err !== null) {
-// 				console.log(err);
-// 			}
-// 			if(data !== null) {
-// 				location = readLocation(data);
-// 				//console.log(JSON.stringify(latest));
-// 			}
-// 			// need the data in order to finnish popup.
-// 			tempMarker.bindPopup("<p>"+tempMarker.type+"<br>"
-// 				+$("#marker_description").val()
-// 				+"<br>IP: "+$("#marker_IP").val()
-// 				+"<br>location:"+location+"</p>");
-// 				// reset all values to ""
-// 				$(".marker_value").val("");
-// 				// and clear tempMarker
-// 				tempMarker = null;
-// 		});
-// }
+function locationQuery(location, result_function) {
+	geocoder.reverseQuery(location,
+		function(err, data) {
+			if(err !== null) {
+				console.log(err);
+			}
+			if(data !== null) {
+				// console.log(data);
+				// console.log(data.features[1].text);
+				result_function(data);
+			}
+		});
+}
 
 function showMap(err, data) {
     if (data.lbounds) {
@@ -550,3 +543,27 @@ function ixp_visible() {
         }
     }
 }
+
+var user_location = undefined;
+
+function getUserLocation(){
+	if(user_location !== undefined){
+		map.panTo(user_location);
+		return;
+	}
+	console.log('Searching for user location');
+	if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(function(position){
+				user_location = {lat: position.coords.latitude,lng:position.coords.longitude};
+				map.panTo(user_location);
+				locationQuery(user_location,function(result){
+					$('#user_location')[0].value = result.features[0].place_name;
+					//  + ' / ' + result.features[1].text;
+				});
+			});
+	} else {
+			$('#user_location').value = 'get a newer browser'
+	}
+}
+
+$('#getUserLocationButton').click(getUserLocation());

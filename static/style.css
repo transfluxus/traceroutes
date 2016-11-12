@@ -12,6 +12,10 @@
     margin: 15px;
   }
 
+  #user_location{
+    width: 300px;
+  }
+
   .coord_input {
     max-width: 50px;
   }
