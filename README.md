@@ -22,3 +22,7 @@ or install requirements globally:
 `python server.py`
 
 open the page http://localhost:5000/
+
+# Information
+
+User location: Getting the user location does not work in all browsers. In Chrome v.50 + the Geolocation API call must be served from a secure context such as HTTPS.
