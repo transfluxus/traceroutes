@@ -551,19 +551,17 @@ function getUserLocation(){
 		map.panTo(user_location);
 		return;
 	}
-	console.log('Searching for user location');
 	if (navigator.geolocation) {
+			console.log('Searching for user location');
 			navigator.geolocation.getCurrentPosition(function(position){
 				user_location = {lat: position.coords.latitude,lng:position.coords.longitude};
 				map.panTo(user_location);
 				locationQuery(user_location,function(result){
 					$('#user_location')[0].value = result.features[0].place_name;
-					//  + ' / ' + result.features[1].text;
+					 + ' / ' + result.features[1].text;
 				});
 			});
 	} else {
 			$('#user_location').value = 'get a newer browser'
 	}
 }
-
-$('#getUserLocationButton').click(getUserLocation());
