@@ -33,62 +33,68 @@ $.getJSON('/today_routes', function(data) {
 // get the internet exchange points
 // https://github.com/telegeography/www.internetexchangemap.com
 // https://www.telegeography.com/index.html
-$.ajax({
-    url: "/ixp",
-    type: "GET",
-    async: true,
-    dataType: "json",
-    success: function(data) {
-        ixps = data.features;
-				// ixps_markers = new L.MarkerClusterGroup();
-        for (ixp in data.features) {
-            var description = '<b>Internet Exchange Point (IXP) </b><br>'
-            for (ex in data.features[ixp].properties.exchanges) {
-                description += data.features[ixp].properties.exchanges[ex].slug + '<br>';
-            }
-            // console.log(data.features[ixp]);
-            var url = data.features[ixp].properties.exchanges[ex].url;
-            description += ($('<div>').append($('<a>').attr('href', url).attr('target', "_blank").html(url))).html();
-            data.features[ixp].properties.description = description;
-            // console.log(data.features[ixp].type);
-            // data.features[ixp].type = 'ixp';
-        }
-        // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
-				// var markers = new L.LayerGroup();
-        L.geoJson(data.features, {
-            // style: function (feature) {
-            //     return {color: feature.properties.color};
-            // },
-            onEachFeature: function(feature, layer) {
-                layer.bindPopup(feature.properties.description);
-                layer.type = 'ixp';
-                feature.properties.type = 'ixp';
-                layer.on("dblclick", function() {
-                    if (temp_route_marker.length > 0) {
-                        var marker = temp_route_marker.pop();
-                        map.removeLayer(marker);
-                        temp_route_marker.push(layer);
-												$('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
-                        update_route_polyline();
-                        console.log('route update');
-                    }
-                    return false;
-                });
-            },
-            // filter : function(feature, layer){
-            // 	return $('#exchange_nodes_checkbox').prop('checked');
-            // }
-        }).addTo(map);
+function get_ixps(){
+	if(ixps_layers.length > 0)
+		return;
+	console.log('requesting ixps');
+	$.ajax({
+	    url: "/ixp",
+	    type: "GET",
+	    async: true,
+	    dataType: "json",
+	    success: function(data) {
+	        ixps = data.features;
+					// ixps_markers = new L.MarkerClusterGroup();
+	        for (ixp in data.features) {
+	            var description = '<b>Internet Exchange Point (IXP)</b><br>'
+	            for (ex in data.features[ixp].properties.exchanges) {
+	                description += data.features[ixp].properties.exchanges[ex].slug + '<br>';
+	            }
+	            // console.log(data.features[ixp]);
+	            var url = data.features[ixp].properties.exchanges[ex].url;
+	            description += ($('<div>').append($('<a>').attr('href', url).attr('target', "_blank").html(url))).html();
+	            data.features[ixp].properties.description = description;
+	            // console.log(data.features[ixp].type);
+	            // data.features[ixp].type = 'ixp';
+	        }
+	        // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
+					// var markers = new L.LayerGroup();
+	        L.geoJson(data.features, {
+	            // style: function (feature) {
+	            //     return {color: feature.properties.color};
+	            // },
+	            onEachFeature: function(feature, layer) {
+	                layer.bindPopup(feature.properties.description);
+	                layer.type = 'ixp';
+	                feature.properties.type = 'ixp';
+	                layer.on("dblclick", function() {
+	                    if (temp_route_marker.length > 0) {
+	                        var marker = temp_route_marker.pop();
+	                        map.removeLayer(marker);
+	                        temp_route_marker.push(layer);
+													$('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
+	                        update_route_polyline();
+	                        console.log('route update');
+	                    }
+	                    return false;
+	                });
+	            },
+	            // filter : function(feature, layer){
+	            // 	return $('#exchange_nodes_checkbox').prop('checked');
+	            // }
+	        }).addTo(map);
 
-        map.eachLayer(function(layer) {
-            if (layer.type == 'ixp') {
-                ixps_layers.push(layer);
-								// ixps_markers.addLayer(layer);
-            }
-        });
-				// map.addLayer(ixps_markers);
-    }
-});
+	        map.eachLayer(function(layer) {
+	            if (layer.type == 'ixp') {
+	                ixps_layers.push(layer);
+									// ixps_markers.addLayer(layer);
+	            }
+	        });
+					// map.addLayer(ixps_markers);
+	    }
+	});
+}
+
 
 
 function init_route() {
@@ -541,9 +547,13 @@ function ixp_visible() {
             map.removeLayer(ixps_layers[ixp]);
         }
     } else {
-        for (ixp in ixps_layers) {
-            ixps_layers[ixp].addTo(map);
-        }
+				if(ixps_layers.length == 0) {
+						get_ixps();
+				} else {
+					for (ixp in ixps_layers) {
+	            ixps_layers[ixp].addTo(map);
+	        }
+				}
     }
 }
 
