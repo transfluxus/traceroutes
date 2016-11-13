@@ -95,6 +95,12 @@ def exchange_points():
     with open('data/exchange_nodes.json') as f:
         return f.read()
 
+@app.route('/lp',methods=['GET'])
+def landing_points():
+    print 'lps'
+    with open('data/landing_points.json') as f:
+        return f.read()
+
 @socketio.on('connect', namespace='')
 def connect():
     print 'client connected'

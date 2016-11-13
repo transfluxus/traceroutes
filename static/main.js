@@ -13,6 +13,7 @@ var my_last_sent_route_id = undefined;
 var socket_connected = false;
 var realtime_listen = false;
 
+var landing_points_layers = [];
 
 // get the map tiles
 $.ajax({
@@ -63,7 +64,7 @@ function get_ixps(){
 					// var markers = new L.LayerGroup();
 	        L.geoJson(data.features, {
 	            // style: function (feature) {
-	            //     return {color: feature.properties.color};
+	            //     return {color: 'DarkSeaGreen'};
 	            // },
 	            onEachFeature: function(feature, layer) {
 	                layer.bindPopup(feature.properties.description);
@@ -89,6 +90,7 @@ function get_ixps(){
 	        map.eachLayer(function(layer) {
 	            if (layer.type == 'ixp') {
 	                ixps_layers.push(layer);
+									layer.setIcon(get_icon('exchange_point', false));
 									// ixps_markers.addLayer(layer);
 	            }
 	        });
@@ -97,7 +99,66 @@ function get_ixps(){
 	});
 }
 
+function get_landing_points(){
+	if(landing_points_layers.length > 0)
+		return;
+	console.log('requesting landing points');
+	$.ajax({
+	    url: "/lp",
+	    type: "GET",
+	    async: true,
+	    dataType: "json",
+	    success: function(data) {
+	        ixps = data.features;
+					// ixps_markers = new L.MarkerClusterGroup();
+	        for (lp in data.features) {
+	            var description = '<b>Landing Points</b><br>'
+	            // for (lp in data.features[lp]) {
+	            //     description += data.features[lp].properties[name] + '<br>';
+	            // }
+	            // data.features[lp].properties.description = description;
+	            // console.log(data.features[ixp].type);
+	            // data.features[ixp].type = 'ixp';
+	        }
+	        // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
+					// var markers = new L.LayerGroup();
+	        L.geoJson(data.features, {
+	            // style: function (feature) {
+	            //     return {color: 'DarkSeaGreen'};
+	            // },
+	            onEachFeature: function(feature, layer) {
+	                layer.bindPopup(feature.properties.name);
+	                layer.type = 'lp';
+	                feature.properties.type = 'lp';
+	                layer.on("dblclick", function() {
+	                    if (temp_route_marker.length > 0) {
+	                        var marker = temp_route_marker.pop();
+	                        map.removeLayer(marker);
+	                        temp_route_marker.push(layer);
+													// $('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
+	                        update_route_polyline();
+	                        console.log('route update');
+	                    }
+	                    return false;
+	                });
+	            },
+	            // filter : function(feature, layer){
+	            // 	return $('#exchange_nodes_checkbox').prop('checked');
+	            // }
+	        }).addTo(map);
 
+	        map.eachLayer(function(layer) {
+	            if (layer.type == 'lp') {
+	                landing_points_layers.push(layer);
+									layer.setIcon(get_icon('landing_point', false));
+									// console.log(layer);
+									// ixps_markers.addLayer(layer);
+	            }
+	        });
+					// map.addLayer(ixps_markers);
+	    }
+	});
+}
 
 function init_route() {
     route_menu_enable(true);
@@ -375,7 +436,11 @@ function get_icon(type, is_temp) {
         icon = 'campsite'
     } else if (type == 'route_destination') {
         icon = 'star'
-    }
+    } else if (type == 'landing_point') {
+				icon = 'harbor'
+		} else if (type == 'exchange_point') {
+			 icon = 'bakery'
+		}
 
     return L.mapbox.marker.icon({
         'marker-size': 'medium',
@@ -559,8 +624,23 @@ function ixp_visible() {
     }
 }
 
-function landing_points_visible() {
 
+
+function landing_points_visible() {
+	var checked = $('#landing_point_checkbox').prop('checked');
+	if (!checked) {
+			for (lp in landing_points_layers) {
+					map.removeLayer(landing_points_layers[lp]);
+			}
+	} else {
+			if(landing_points_layers.length == 0) {
+					get_landing_points();
+			} else {
+				for (lp in landing_points_layers) {
+						landing_points_layers[lp].addTo(map);
+				}
+			}
+	}
 }
 
 var user_location = undefined;
