@@ -27,6 +27,48 @@
     max-width: 50px;
   }
 
+  .route_list_title {
+    font-weight: bold;
+    text-transform: uppercase;
+    padding-bottom: 5px;
+  }
+
+  .route_list_details {
+    /*padding-right: px;*/
+    padding-left: 5px;
+  }
+
+  .route_list_table {
+    padding-top: 7px;
+  }
+  .route_list_th {
+    padding: 7px;
+    background-color: Gainsboro;
+  }
+
+  .route_list_td {
+      padding: 10px;
+      background-color: Silver;
+  }
+
+  .leaflet-popup-content {
+    width: 580px !important;
+  }
+
+  .tracker_table{
+    padding-top: 10px;
+  }
+
+  .tracker_th {
+    padding: 7px;
+    background-color: Goldenrod
+  }
+
+  .tracker_td {
+    padding: 7px;
+    background-color: Chocolate
+  }
+
   #route_input {
     position: relative;
     /* top: -124px; */

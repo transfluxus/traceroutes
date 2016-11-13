@@ -10,7 +10,9 @@ var routes = [];
 var ixps_layers = [];
 // var ixps_markers;
 var my_last_sent_route_id = undefined;
-// var socket_connected = false;
+var socket_connected = false;
+var realtime_listen = false;
+
 
 // get the map tiles
 $.ajax({
@@ -264,7 +266,7 @@ function route_done() {
     var co2 = $('#route_co2')[0].value;
 
     var tracker_no = $("#tracker_table_body tr").length;
-    // console.log('number of trackers');
+    // console.log('number of trackers' + tracker_no);
     var trackers = [];
     for (var t = 0; t < tracker_no; t++) {
         var tracker = {}
@@ -450,15 +452,15 @@ function addRoute(route) {
     route_box = $('<div>')
         .attr("id", "route-" + id)
         .attr("class", "routeBox");
-    var title = $('<div>');
+    var title = $('<div>').addClass('route_list_title');
     title.html('Route: ' + (routes.length - 1));
     title.appendTo(route_box);
 
-    var url = $('<span>').html('URL: ' + route.url);
+    var url = $('<span>').html('<b>URL:</b> ' + route.url).addClass('route_list_details');
     // var description = $('<span>').html(' / description: ' + route.description);
-    var total_km = $('<span>').html(' / Total km: ' + route.total_km);
-    var datasize = $('<span>').html(' / Data size: ' + route.datasize);
-    var co2 = $('<span>').html(' / CO2: ' + route.co2);
+    var total_km = $('<span>').html(' <b>Total distance:</b> ' + route.total_km + 'km').addClass('route_list_details');
+    var datasize = $('<span>').html(' <b>Data size:</b> ' + route.datasize + "kb").addClass('route_list_details');
+    var co2 = $('<span>').html(' <b>CO2:</b> ' + route.co2 + 'g').addClass('route_list_details');
 
     var general = $('<div>');
     url.appendTo(general);
@@ -468,17 +470,17 @@ function addRoute(route) {
     co2.appendTo(general);
     general.appendTo(route_box);
 
-    var table = $('<table>');
+    var table = $('<table>').addClass('route_list_table');
     th = $('<thead>');
-    td = $('<th>').html('#').appendTo(th);
-    td = $('<th>').html('IP').appendTo(th);
-    td = $('<th>').html('Location').appendTo(th);
-    td = $('<th>').html('ISP').appendTo(th);
-    td = $('<th>').html('ISP nationality').appendTo(th);
-    td = $('<th>').html('Cable name').appendTo(th);
-    td = $('<th>').html('port in/out').appendTo(th);
-    td = $('<th>').html('NSP').appendTo(th);
-    td = $('<th>').html('NSP nationality').appendTo(th);
+    td = $('<th>').html('#').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('IP').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('Location').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('ISP').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('ISP nationality').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('Cable name').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('port in/out').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('NSP').addClass('route_list_th').appendTo(th);
+    td = $('<th>').html('NSP nationality').addClass('route_list_th').appendTo(th);
     th.appendTo(table)
     coords = [];
 
@@ -487,9 +489,9 @@ function addRoute(route) {
     for (var p = 0; p < route.points.length; p++) {
         var point = route.points[p];
         row = $('<tr>');
-        td = $('<td>').html(p).appendTo(row);
+        td = $('<td>').html(p).addClass('route_list_td').appendTo(row);
         for (pi in fields) {
-            td = $('<td>').html(point[fields[pi]]).appendTo(row);
+            td = $('<td>').addClass('route_list_td').html(point[fields[pi]]).appendTo(row);
         }
         row.appendTo(table);
         coords.push(point.coordinate);
@@ -507,23 +509,23 @@ function addRoute(route) {
 
     table.appendTo(route_box);
 
-    var tr_table = $('<table>');
+    var tr_table = $('<table>').addClass('tracker_table');
     th = $('<thead>');
-    td = $('<th>').html('#').appendTo(th);
-    td = $('<th>').html('Tracker name').appendTo(th);
-    td = $('<th>').html('Company').appendTo(th);
-    td = $('<th>').html('Nationality').appendTo(th);
+    td = $('<th>').html('#').appendTo(th).addClass('tracker_th');
+    td = $('<th>').html('Tracker name').appendTo(th).addClass('tracker_th');
+    td = $('<th>').html('Company').appendTo(th).addClass('tracker_th');
+    td = $('<th>').html('Nationality').appendTo(th).addClass('tracker_th');
     th.appendTo(tr_table)
 
     if ('trackers' in route) {
         // console.log('found! ' + route.trackers.length);
-        for (var p = 0; p < route.trackers.length - 1; p++) {
+        for (var p = 0; p < route.trackers.length; p++) {
             var tracker = route.trackers[p];
             row = $('<tr>');
-            td = $('<td>').html(p).appendTo(row);
-            td = $('<td>').html(tracker.tracker_name).appendTo(row);
-            td = $('<td>').html(tracker.company).appendTo(row);
-            td = $('<td>').html(tracker.nationality).appendTo(row);
+            td = $('<td>').html(p).appendTo(row).addClass('tracker_td');
+            td = $('<td>').html(tracker.tracker_name).appendTo(row).addClass('tracker_td');
+            td = $('<td>').html(tracker.company).appendTo(row).addClass('tracker_td');
+            td = $('<td>').html(tracker.nationality).appendTo(row).addClass('tracker_td');
             row.appendTo(tr_table);
         }
     }
@@ -557,6 +559,10 @@ function ixp_visible() {
     }
 }
 
+function landing_points_visible() {
+
+}
+
 var user_location = undefined;
 
 function getUserLocation(){
@@ -581,12 +587,14 @@ function getUserLocation(){
 
 function socket_connect(){
 	// TODO allow disconnects
-	// if(socket_connected) {
-	// 	io.disconnect();
-	// 	$('#socketConnectButton').html('Get Routes in Realtime');
-	// } else {
+	realtime_listen = !realtime_listen
+	if(realtime_listen) {
+		if(!socket_connected) {
 		var socket = io.connect('http://' + document.domain + ':' + location.port);
 		socket.on('newroute', function(msg) {
+			if(!realtime_listen){
+				return;
+			}
 				// console.log(msg);
 				lastMsg = msg;
 				var route = JSON.parse(msg)
@@ -599,8 +607,15 @@ function socket_connect(){
 		});
 		socket.on('connect', function(msg){
 				console.log('connected');
-				// socket_connected = true;
-				// $('#socketConnectButton').html('deactivate realtime updates');
+				realtime_listen = true;
+				socket_connected = true;
+				$('#socketConnectButton').html('deactivate realtime updates');
 		});
-	// }
+	} else {
+			realtime_listen = true;
+			$('#socketConnectButton').html('deactivate realtime updates');
+	}
+	} else {
+		$('#socketConnectButton').html('Get Routes in Realtime');
+	}
 }
