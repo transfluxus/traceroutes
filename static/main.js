@@ -23,7 +23,12 @@ $.ajax({
     dataType: 'json',
     success: function(data) {
         L.mapbox[data.name] = data.t;
-        map = L.mapbox.map('map', 'mapbox.streets').setView([45.50, -73.567], 5);
+        map = L.mapbox.map('map', 'mapbox.streets', {
+            tileLayer: {
+							continuousWorld: false,
+			        noWrap: true
+            }
+        }).setView([45.50, -73.567], 5);
         geocoder = L.mapbox.geocoder('mapbox.places');
     }
 });
@@ -36,128 +41,128 @@ $.getJSON('/today_routes', function(data) {
 // get the internet exchange points
 // https://github.com/telegeography/www.internetexchangemap.com
 // https://www.telegeography.com/index.html
-function get_ixps(){
-	if(ixps_layers.length > 0)
-		return;
-	console.log('requesting ixps');
-	$.ajax({
-	    url: "/ixp",
-	    type: "GET",
-	    async: true,
-	    dataType: "json",
-	    success: function(data) {
-	        ixps = data.features;
-					// ixps_markers = new L.MarkerClusterGroup();
-	        for (ixp in data.features) {
-	            var description = '<b>Internet Exchange Point (IXP)</b><br>'
-	            for (ex in data.features[ixp].properties.exchanges) {
-	                description += data.features[ixp].properties.exchanges[ex].slug + '<br>';
-	            }
-	            // console.log(data.features[ixp]);
-	            var url = data.features[ixp].properties.exchanges[ex].url;
-	            description += ($('<div>').append($('<a>').attr('href', url).attr('target', "_blank").html(url))).html();
-	            data.features[ixp].properties.description = description;
-	            // console.log(data.features[ixp].type);
-	            // data.features[ixp].type = 'ixp';
-	        }
-	        // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
-					// var markers = new L.LayerGroup();
-	        L.geoJson(data.features, {
-	            // style: function (feature) {
-	            //     return {color: 'DarkSeaGreen'};
-	            // },
-	            onEachFeature: function(feature, layer) {
-	                layer.bindPopup(feature.properties.description);
-	                layer.type = 'ixp';
-	                feature.properties.type = 'ixp';
-	                layer.on("dblclick", function() {
-	                    if (temp_route_marker.length > 0) {
-	                        var marker = temp_route_marker.pop();
-	                        map.removeLayer(marker);
-	                        temp_route_marker.push(layer);
-													$('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
-	                        update_route_polyline();
-	                        console.log('route update');
-	                    }
-	                    return false;
-	                });
-	            },
-	            // filter : function(feature, layer){
-	            // 	return $('#exchange_nodes_checkbox').prop('checked');
-	            // }
-	        }).addTo(map);
+function get_ixps() {
+    if (ixps_layers.length > 0)
+        return;
+    console.log('requesting ixps');
+    $.ajax({
+        url: "/ixp",
+        type: "GET",
+        async: true,
+        dataType: "json",
+        success: function(data) {
+            ixps = data.features;
+            // ixps_markers = new L.MarkerClusterGroup();
+            for (ixp in data.features) {
+                var description = '<b>Internet Exchange Point (IXP)</b><br>'
+                for (ex in data.features[ixp].properties.exchanges) {
+                    description += data.features[ixp].properties.exchanges[ex].slug + '<br>';
+                }
+                // console.log(data.features[ixp]);
+                var url = data.features[ixp].properties.exchanges[ex].url;
+                description += ($('<div>').append($('<a>').attr('href', url).attr('target', "_blank").html(url))).html();
+                data.features[ixp].properties.description = description;
+                // console.log(data.features[ixp].type);
+                // data.features[ixp].type = 'ixp';
+            }
+            // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
+            // var markers = new L.LayerGroup();
+            L.geoJson(data.features, {
+                // style: function (feature) {
+                //     return {color: 'DarkSeaGreen'};
+                // },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup(feature.properties.description);
+                    layer.type = 'ixp';
+                    feature.properties.type = 'ixp';
+                    layer.on("dblclick", function() {
+                        if (temp_route_marker.length > 0) {
+                            var marker = temp_route_marker.pop();
+                            map.removeLayer(marker);
+                            temp_route_marker.push(layer);
+                            $('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
+                            update_route_polyline();
+                            console.log('route update');
+                        }
+                        return false;
+                    });
+                },
+                // filter : function(feature, layer){
+                // 	return $('#exchange_nodes_checkbox').prop('checked');
+                // }
+            }).addTo(map);
 
-	        map.eachLayer(function(layer) {
-	            if (layer.type == 'ixp') {
-	                ixps_layers.push(layer);
-									layer.setIcon(get_icon('exchange_point', false));
-									// ixps_markers.addLayer(layer);
-	            }
-	        });
-					// map.addLayer(ixps_markers);
-	    }
-	});
+            map.eachLayer(function(layer) {
+                if (layer.type == 'ixp') {
+                    ixps_layers.push(layer);
+                    layer.setIcon(get_icon('exchange_point', false));
+                    // ixps_markers.addLayer(layer);
+                }
+            });
+            // map.addLayer(ixps_markers);
+        }
+    });
 }
 
-function get_landing_points(){
-	if(landing_points_layers.length > 0)
-		return;
-	console.log('requesting landing points');
-	$.ajax({
-	    url: "/lp",
-	    type: "GET",
-	    async: true,
-	    dataType: "json",
-	    success: function(data) {
-	        ixps = data.features;
-					// ixps_markers = new L.MarkerClusterGroup();
-	        for (lp in data.features) {
-	            var description = '<b>Landing Points</b><br>'
-	            // for (lp in data.features[lp]) {
-	            //     description += data.features[lp].properties[name] + '<br>';
-	            // }
-	            // data.features[lp].properties.description = description;
-	            // console.log(data.features[ixp].type);
-	            // data.features[ixp].type = 'ixp';
-	        }
-	        // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
-					// var markers = new L.LayerGroup();
-	        L.geoJson(data.features, {
-	            // style: function (feature) {
-	            //     return {color: 'DarkSeaGreen'};
-	            // },
-	            onEachFeature: function(feature, layer) {
-	                layer.bindPopup(feature.properties.name);
-	                layer.type = 'lp';
-	                feature.properties.type = 'lp';
-	                layer.on("dblclick", function() {
-	                    if (temp_route_marker.length > 0) {
-	                        var marker = temp_route_marker.pop();
-	                        map.removeLayer(marker);
-	                        temp_route_marker.push(layer);
-													// $('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
-	                        update_route_polyline();
-	                        console.log('route update');
-	                    }
-	                    return false;
-	                });
-	            },
-	            // filter : function(feature, layer){
-	            // 	return $('#exchange_nodes_checkbox').prop('checked');
-	            // }
-	        }).addTo(map);
+function get_landing_points() {
+    if (landing_points_layers.length > 0)
+        return;
+    console.log('requesting landing points');
+    $.ajax({
+        url: "/lp",
+        type: "GET",
+        async: true,
+        dataType: "json",
+        success: function(data) {
+            ixps = data.features;
+            // ixps_markers = new L.MarkerClusterGroup();
+            for (lp in data.features) {
+                var description = '<b>Landing Points</b><br>'
+                    // for (lp in data.features[lp]) {
+                    //     description += data.features[lp].properties[name] + '<br>';
+                    // }
+                    // data.features[lp].properties.description = description;
+                    // console.log(data.features[ixp].type);
+                    // data.features[ixp].type = 'ixp';
+            }
+            // 	var myLayer = L.mapbox.featureLayer().setGeoJSON(data.features).addTo(map);
+            // var markers = new L.LayerGroup();
+            L.geoJson(data.features, {
+                // style: function (feature) {
+                //     return {color: 'DarkSeaGreen'};
+                // },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup(feature.properties.name);
+                    layer.type = 'lp';
+                    feature.properties.type = 'lp';
+                    layer.on("dblclick", function() {
+                        if (temp_route_marker.length > 0) {
+                            var marker = temp_route_marker.pop();
+                            map.removeLayer(marker);
+                            temp_route_marker.push(layer);
+                            // $('#route_point_location_' + (temp_route_marker.length - 1))[0].value = layer.feature.properties.metro_area;
+                            update_route_polyline();
+                            console.log('route update');
+                        }
+                        return false;
+                    });
+                },
+                // filter : function(feature, layer){
+                // 	return $('#exchange_nodes_checkbox').prop('checked');
+                // }
+            }).addTo(map);
 
-	        map.eachLayer(function(layer) {
-	            if (layer.type == 'lp') {
-	                landing_points_layers.push(layer);
-									layer.setIcon(get_icon('landing_point', false));
-									// console.log(layer);
-									// ixps_markers.addLayer(layer);
-	            }
-	        });
-					// map.addLayer(ixps_markers);
-	    }
-	});
+            map.eachLayer(function(layer) {
+                if (layer.type == 'lp') {
+                    landing_points_layers.push(layer);
+                    layer.setIcon(get_icon('landing_point', false));
+                    // console.log(layer);
+                    // ixps_markers.addLayer(layer);
+                }
+            });
+            // map.addLayer(ixps_markers);
+        }
+    });
 }
 
 function init_route() {
@@ -353,18 +358,18 @@ function route_done() {
     addRoute(route);
 
     $.post('/newroute', {
-        url: url,
-        total_km: total_km,
-        datasize: datasize,
-        co2: co2,
-        points: JSON.stringify(points),
-        trackers: JSON.stringify(trackers),
-    }, function(data) {
-        console.log('route sent');
-				// console.log(data);
-				my_last_sent_route_id = data.route_id;
-    },
-		"json");
+            url: url,
+            total_km: total_km,
+            datasize: datasize,
+            co2: co2,
+            points: JSON.stringify(points),
+            trackers: JSON.stringify(trackers),
+        }, function(data) {
+            console.log('route sent');
+            // console.log(data);
+            my_last_sent_route_id = data.route_id;
+        },
+        "json");
 }
 
 function route_cancel() {
@@ -437,10 +442,10 @@ function get_icon(type, is_temp) {
     } else if (type == 'route_destination') {
         icon = 'star'
     } else if (type == 'landing_point') {
-				icon = 'harbor'
-		} else if (type == 'exchange_point') {
-			 icon = 'bakery'
-		}
+        icon = 'harbor'
+    } else if (type == 'exchange_point') {
+        icon = 'bakery'
+    }
 
     return L.mapbox.marker.icon({
         'marker-size': 'medium',
@@ -488,17 +493,17 @@ function readLocation(geoJSON) {
 // console.log(geoCode);
 
 function locationQuery(location, result_function) {
-	geocoder.reverseQuery(location,
-		function(err, data) {
-			if(err !== null) {
-				console.log(err);
-			}
-			if(data !== null) {
-				// console.log(data);
-				// console.log(data.features[1].text);
-				result_function(data);
-			}
-		});
+    geocoder.reverseQuery(location,
+        function(err, data) {
+            if (err !== null) {
+                console.log(err);
+            }
+            if (data !== null) {
+                // console.log(data);
+                // console.log(data.features[1].text);
+                result_function(data);
+            }
+        });
 }
 
 function showMap(err, data) {
@@ -567,7 +572,7 @@ function addRoute(route) {
             else if (p == (route.points.length - 1))
                 type = 'route_destination';
             var marker = createMarker(type, point.coordinate, false, false);
-            marker.bindPopup('<table> <thead>' + th.html() + ' </thead> ' + row.html() +'</table>');
+            marker.bindPopup('<table> <thead>' + th.html() + ' </thead> ' + row.html() + '</table>');
         }
         // TODO for non 'regular_route_point' add popup info
     }
@@ -614,86 +619,89 @@ function ixp_visible() {
             map.removeLayer(ixps_layers[ixp]);
         }
     } else {
-				if(ixps_layers.length == 0) {
-						get_ixps();
-				} else {
-					for (ixp in ixps_layers) {
-	            ixps_layers[ixp].addTo(map);
-	        }
-				}
+        if (ixps_layers.length == 0) {
+            get_ixps();
+        } else {
+            for (ixp in ixps_layers) {
+                ixps_layers[ixp].addTo(map);
+            }
+        }
     }
 }
 
 function landing_points_visible() {
-	var checked = $('#landing_point_checkbox').prop('checked');
-	if (!checked) {
-			for (lp in landing_points_layers) {
-					map.removeLayer(landing_points_layers[lp]);
-			}
-	} else {
-			if(landing_points_layers.length == 0) {
-					get_landing_points();
-			} else {
-				for (lp in landing_points_layers) {
-						landing_points_layers[lp].addTo(map);
-				}
-			}
-	}
+    var checked = $('#landing_point_checkbox').prop('checked');
+    if (!checked) {
+        for (lp in landing_points_layers) {
+            map.removeLayer(landing_points_layers[lp]);
+        }
+    } else {
+        if (landing_points_layers.length == 0) {
+            get_landing_points();
+        } else {
+            for (lp in landing_points_layers) {
+                landing_points_layers[lp].addTo(map);
+            }
+        }
+    }
 }
 
 var user_location = undefined;
 
-function getUserLocation(){
-	if(user_location !== undefined){
-		map.panTo(user_location);
-		return;
-	}
-	if (navigator.geolocation) {
-			console.log('Searching for user location');
-			navigator.geolocation.getCurrentPosition(function(position){
-				user_location = {lat: position.coords.latitude,lng:position.coords.longitude};
-				map.panTo(user_location);
-				locationQuery(user_location,function(result){
-					$('#user_location')[0].value = result.features[0].place_name;
-					 + ' / ' + result.features[1].text;
-				});
-			});
-	} else {
-			$('#user_location').value = 'get a newer browser'
-	}
+function getUserLocation() {
+    if (user_location !== undefined) {
+        map.panTo(user_location);
+        return;
+    }
+    if (navigator.geolocation) {
+        console.log('Searching for user location');
+        navigator.geolocation.getCurrentPosition(function(position) {
+            user_location = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map.panTo(user_location);
+            locationQuery(user_location, function(result) {
+                $('#user_location')[0].value = result.features[0].place_name; +
+                ' / ' + result.features[1].text;
+            });
+        });
+    } else {
+        $('#user_location').value = 'get a newer browser'
+    }
 }
 
-function socket_connect(){
-	// TODO allow disconnects
-	realtime_listen = !realtime_listen
-	if(realtime_listen) {
-		if(!socket_connected) {
-		var socket = io.connect('http://' + document.domain + ':' + location.port);
-		socket.on('newroute', function(msg) {
-			if(!realtime_listen){
-				return;
-			}
-				// console.log(msg);
-				lastMsg = msg;
-				var route = JSON.parse(msg)
-				if(route.route_id !== my_last_sent_route_id) {
-					addRoute(route);
-					console.log('new route received...')
-				} else {
-					console.log('new route rejected. its mine...')
-				}
-		});
-		socket.on('connect', function(msg){
-				console.log('connected');
-				realtime_listen = true;
-				socket_connected = true;
-				$('#socketConnectButton').html('deactivate realtime updates');
-		});
-	} else {
-			realtime_listen = true;
-			$('#socketConnectButton').html('deactivate realtime updates');
-	}
-	} else {
-		$('#socketConnectButton').html('Get Routes in Realtime');
-	}
+function socket_connect() {
+    // TODO allow disconnects
+    realtime_listen = !realtime_listen
+    if (realtime_listen) {
+        if (!socket_connected) {
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            socket.on('newroute', function(msg) {
+                if (!realtime_listen) {
+                    return;
+                }
+                // console.log(msg);
+                lastMsg = msg;
+                var route = JSON.parse(msg)
+                if (route.route_id !== my_last_sent_route_id) {
+                    addRoute(route);
+                    console.log('new route received...')
+                } else {
+                    console.log('new route rejected. its mine...')
+                }
+            });
+            socket.on('connect', function(msg) {
+                console.log('connected');
+                realtime_listen = true;
+                socket_connected = true;
+                $('#socketConnectButton').html('deactivate realtime updates');
+            });
+        } else {
+            realtime_listen = true;
+            $('#socketConnectButton').html('deactivate realtime updates');
+        }
+    } else {
+        $('#socketConnectButton').html('Get Routes in Realtime');
+    }
 }
