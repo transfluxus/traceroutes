@@ -567,7 +567,7 @@ function addRoute(route) {
             else if (p == (route.points.length - 1))
                 type = 'route_destination';
             var marker = createMarker(type, point.coordinate, false, false);
-            marker.bindPopup('<table> <thead>' + th.html() + ' </thead> ' + row.html() + '</table>');
+            marker.bindPopup('<table> <thead>' + th.html() + ' </thead> ' + row.html() +'</table>');
         }
         // TODO for non 'regular_route_point' add popup info
     }
@@ -623,8 +623,6 @@ function ixp_visible() {
 				}
     }
 }
-
-
 
 function landing_points_visible() {
 	var checked = $('#landing_point_checkbox').prop('checked');
